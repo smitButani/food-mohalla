@@ -19,6 +19,7 @@ use Illuminate\Http\Request;
 
 Route::post('/otp-generate','Api\UserController@tokenGenerate');
 Route::post('/otp-verification','Api\UserController@verifyOtp')->name('login');
+Route::post('/create-user','Api\UserController@userCreate')->name('Create');
 
 Route::group(['prefix' => 'user', 'middleware' => 'auth:api'], function(){
     Route::post('/update','Api\UserController@update');

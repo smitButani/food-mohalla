@@ -66,6 +66,28 @@ class UserController extends Controller
         return response()->json(['data' => ['user' => $user, 'access_token' => $accessToken ],'message' => 'Otp verify Successfully.','status' => true]);
     }
 
+    public function userCreate(Request $request){
+        $validator = Validator::make($request->all(), 
+        [
+            'phone_number'=>'required',
+        ]);
+        if ($validator->fails()) {
+            return  response()->json([
+                'data' => $validator->messages(), 
+                'message' => 'please add valid data.', 
+                'status' => false
+            ]);
+        } else {
+            $user = User::firstOrNew(array('phone_number' => $request->phone_number));
+            $user->phone_number = $request->phone_number;
+            $user->phone_verified_at = Carbon::now();
+            $accessToken = $user->createToken('authToken')->accessToken;
+            $user->token = $accessToken;
+            $user->save();
+        }
+        return response()->json(['data' => ['user' => $user, 'access_token' => $accessToken ],'message' => 'Otp verify Successfully.','status' => true]);
+    }
+
     public function update(Request $request){
         $validator = Validator::make($request->all(), 
         [
