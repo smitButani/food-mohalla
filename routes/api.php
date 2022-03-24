@@ -27,7 +27,7 @@ Route::group(['prefix' => 'user', 'middleware' => 'auth:api'], function(){
 
 Route::get('/', function(){
     return 'ready to call apis.';
-})->middleware('auth:api');
+});
 
 Route::group(['prefix' => 'shop'], function(){
     Route::get('/', 'Api\ShopController@list');
