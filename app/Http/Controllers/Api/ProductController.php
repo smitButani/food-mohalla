@@ -49,7 +49,6 @@ class ProductController extends Controller
             if($products){
                 $shops = Shops::all();
                 foreach($shops as $shop){
-                    print_r($shop->id);
                      $shop_product = new ShopsProducts();
                      $shop_product->shop_id =  $shop->id;
                      $shop_product->product_id =  $products->id;
@@ -122,12 +121,21 @@ class ProductController extends Controller
     }
 
     public function productWiseVariants(Request $request){
-        $product_variant = ProductVariant::where('product_id',$request->id)->get();
+        $product_variant = ProductVariant::where('product_id',$request->productId)->get();
         return response()->json(['data' => $product_variant,'message' => 'Products variants get Successfully.','status' => true]);
     }
 
     public function productCustomizeDetails(Request $request){
-        $product_customize_details = Products::where('product_id',$request->id)->with(['productCustomizeType.productCustomizeType'])->first();
+        $product_customize_details = Products::where('id',$request->productId)->with(['productCustomizeType.productCustomizeOption'])->first();
         return response()->json(['data' => $product_customize_details,'message' => 'Products variants get Successfully.','status' => true]);
+    }
+
+    public function productSearch(Request $request){
+        if(!$request->search){
+            $products = Products::all();
+        }else{
+            $products = Products::where('name', 'like', '%' . $request->search . '%')->get();
+        }
+        return response()->json(['data' => $products,'message' => 'Products get Successfully.','status' => true]);
     }
 }

@@ -129,4 +129,15 @@ class UserController extends Controller
         return response()->json(['data' => ['user' => $user ],'message' => 'Otp verify Successfully.','status' => true]);
     }
 
+    public function userDetails(Request $request){
+        $user = auth()->user();
+        if(!$user){
+            return response()->json(['data' => NUll,'message' => 'User not found.','status' => false]);
+        }
+        return response()->json(['data' => $user,'message' => 'User get Successfully.','status' => true]);
+    }
+
+    public function shopListByLocation(Request $request){
+        return 'pending api';
+    }
 }

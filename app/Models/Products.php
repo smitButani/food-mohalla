@@ -17,6 +17,6 @@ class Products extends Model
 
     public function productCustomizeType()
     {
-        return $this->hasMany(\App\Models\ProductCustomizeType::class);
+        return $this->hasMany(\App\Models\ProductCustomizeType::class,'product_id','id');
     }
 }

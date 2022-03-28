@@ -14,6 +14,6 @@ class ProductCustomizeType extends Model
 
     public function productCustomizeOption()
     {
-        return $this->hasMany(\App\Models\ProductCustomizeOption::class);
+        return $this->hasMany(\App\Models\ProductCustomizeOption::class,'customize_type_id','id');
     }
 }
