@@ -39,7 +39,15 @@ class ShopController extends Controller
     }
 
     public function list(Request $request){
-        $shops = Shops::all();
+        $validator = Validator::make($request->all(), 
+        [
+            'search'=>'required|min:2',
+        ]);
+        if(!$request->search){
+            $shops = Shops::all();
+        }else{
+            $shops = Shops::where('address', 'like', '%' . $request->search . '%')->get();
+        }
         return response()->json(['data' => $shops,'message' => 'Shops get Successfully.','status' => true]);
     }
 

@@ -24,7 +24,7 @@ Route::post('/create-user','Api\UserController@userCreate')->name('Create');
 Route::group(['prefix' => 'user', 'middleware' => 'auth:api'], function(){
     Route::get('/view-profile','Api\UserController@userDetails');
     Route::post('/update','Api\UserController@update');
-    Route::get('/store-list-by-location', 'Api\ShopController@list');
+    Route::post('/store-list-by-location', 'Api\ShopController@list');
 });
 
 //dashboard Api List

@@ -85,7 +85,7 @@ class UserController extends Controller
             $user->token = $accessToken;
             $user->save();
         }
-        return response()->json(['data' => ['user' => $user, 'access_token' => $accessToken ],'message' => 'Otp verify Successfully.','status' => true]);
+        return response()->json(['data' => ['user' => $user, 'access_token' => $accessToken ],'message' => 'User Create Successfully.','status' => true]);
     }
 
     public function update(Request $request){
@@ -126,7 +126,7 @@ class UserController extends Controller
             $user->phone_number = $request->phone_number ?? null;
             $user->save();
         }
-        return response()->json(['data' => ['user' => $user ],'message' => 'Otp verify Successfully.','status' => true]);
+        return response()->json(['data' => ['user' => $user ],'message' => 'User Updated Successfully.','status' => true]);
     }
 
     public function userDetails(Request $request){
@@ -135,9 +135,5 @@ class UserController extends Controller
             return response()->json(['data' => NUll,'message' => 'User not found.','status' => false]);
         }
         return response()->json(['data' => $user,'message' => 'User get Successfully.','status' => true]);
-    }
-
-    public function shopListByLocation(Request $request){
-        return 'pending api';
     }
 }
