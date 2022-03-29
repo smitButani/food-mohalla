@@ -109,7 +109,7 @@ Route::group(['prefix' => 'product-customize-option'], function(){
 });
 
 // grab-best-deals
-Route::group(['prefix' => 'grab-best-deals', 'middleware' => 'auth:api'], function(){
+Route::group(['prefix' => 'grab-best-deals'], function(){
     Route::get('/{id}', 'Api\GrabBestDealController@get_one');
     Route::post('/create', 'Api\GrabBestDealController@create');
     Route::post('/update/{id}', 'Api\GrabBestDealController@update');
@@ -117,7 +117,7 @@ Route::group(['prefix' => 'grab-best-deals', 'middleware' => 'auth:api'], functi
 });
 
 // recommended
-Route::group(['prefix' => 'recommended', 'middleware' => 'auth:api'], function(){
+Route::group(['prefix' => 'recommended'], function(){
     // Route::get('/', 'Api\RecommandedController@list');
     Route::get('/{id}', 'Api\RecommandedController@get_one');
     Route::post('/create', 'Api\RecommandedController@create');
@@ -126,7 +126,7 @@ Route::group(['prefix' => 'recommended', 'middleware' => 'auth:api'], function()
 });
 
 // offers
-Route::group(['prefix' => 'offers', 'middleware' => 'auth:api'], function(){
+Route::group(['prefix' => 'offers'], function(){
     Route::get('/{id}', 'Api\OfferController@get_one');
     Route::post('/create', 'Api\OfferController@create');
     Route::post('/update/{id}', 'Api\OfferController@update');
