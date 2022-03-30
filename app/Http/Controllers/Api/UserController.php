@@ -85,7 +85,7 @@ class UserController extends Controller
             $user->token = $accessToken;
             $user->save();
         }
-        return response()->json(['data' => ['user' => $user, 'access_token' => $accessToken ],'message' => 'User Create Successfully.','status' => true]);
+        return response()->json(['data' => ['user' => $user, 'access_token' => $accessToken ],'message' => 'User created successfully.','status' => true]);
     }
 
     public function update(Request $request){
@@ -106,7 +106,7 @@ class UserController extends Controller
             // $user = User::where('phone_number', $request->phone_number)->where('otp_token', $request->otp_token)->first();
             $user = auth()->user();
             if(!$user){
-                return response()->json(['data' => NUll,'message' => 'User not Found.','status' => false]);
+                return response()->json(['data' => NUll,'message' => 'User not found.','status' => false]);
             }
 
             if ($request->hasFile('profile_img')) {
@@ -117,16 +117,17 @@ class UserController extends Controller
                 Storage::put('public/user/profile/user-' . $filename, (string) file_get_contents($user_image), 'public');
                 $profileUrl =  Storage::url('public/user/profile/user-' . $filename);
 
-                $user->image_url = $profileUrl;
+                $user->image_url = $profileUrl ?? '';
             }
             
-            $user->first_name = $request->first_name ?? null;
-            $user->last_name = $request->last_name ?? null;
-            $user->username = $request->username ?? null;
-            $user->phone_number = $request->phone_number ?? null;
+            $user->first_name = $request->first_name ?? '';
+            $user->last_name = $request->last_name ?? '';
+            $user->username = $request->username ?? '';
+            $user->phone_number = $request->phone_number ?? '';
+            $user->email = $request->email ?? '';
             $user->save();
         }
-        return response()->json(['data' => ['user' => $user ],'message' => 'User Updated Successfully.','status' => true]);
+        return response()->json(['data' => ['user' => $user ],'message' => 'User updated successfully.','status' => true]);
     }
 
     public function userDetails(Request $request){
@@ -134,6 +135,6 @@ class UserController extends Controller
         if(!$user){
             return response()->json(['data' => NUll,'message' => 'User not found.','status' => false]);
         }
-        return response()->json(['data' => $user,'message' => 'User get Successfully.','status' => true]);
+        return response()->json(['data' => $user,'message' => 'User get successfully.','status' => true]);
     }
 }

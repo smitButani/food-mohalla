@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Shops;
 use Validator;
+use Storage;
 
 class ShopController extends Controller
 {
@@ -17,7 +18,8 @@ class ShopController extends Controller
             'city'=>'required',
             'latitude'=>'required',
             'longitude'=>'required',
-            'contact_number'=>'required|',
+            'contact_number'=>'required',
+            'shop_icon'=>'required|mimes:jpeg,jpg,bmp,png,gif,svg,pdf',
         ]);  
         if ($validator->fails()) {
             return  response()->json([
@@ -26,6 +28,17 @@ class ShopController extends Controller
                 'status' => false
             ]);
         } else {
+
+            if ($request->hasFile('shop_icon')) {
+                $shop_image = $request->file('shop_icon');
+            } 
+            $file_extension= $shop_image->getClientOriginalExtension();
+            $filename = time() . '.' . $file_extension;
+
+            # upload original image
+            Storage::put('public/shop_image/shop-icon' . $filename, (string) file_get_contents($shop_image), 'public');
+            $shopFileUrl =  Storage::url('public/shop_image/shop-icon' . $filename);
+
             $shop = new Shops();
             $shop->shop_name = $request->shop_name;
             $shop->address = $request->address;
@@ -33,6 +46,7 @@ class ShopController extends Controller
             $shop->latitude = $request->latitude;
             $shop->longitude = $request->longitude;
             $shop->contact_number = $request->contact_number;
+            $shop->shop_icon_url = $shopFileUrl;
             $shop->save();
         }
         return response()->json(['data' => $shop,'message' => 'Shop Created Successfully.','status' => true]);
@@ -41,14 +55,44 @@ class ShopController extends Controller
     public function list(Request $request){
         $validator = Validator::make($request->all(), 
         [
-            'search'=>'required|min:2',
+            'current_lat'=> 'required',
+            'current_long'=> 'required',
         ]);
-        if(!$request->search){
-            $shops = Shops::all();
-        }else{
-            $shops = Shops::where('address', 'like', '%' . $request->search . '%')->get();
+        if ($validator->fails()) {
+            return  response()->json([
+                'data' => $validator->messages(), 
+                'message' => 'please add valid data.', 
+                'status' => false
+            ]);
         }
-        return response()->json(['data' => $shops,'message' => 'Shops get Successfully.','status' => true]);
+
+        $lat = $request->current_lat;
+        $long = $request->current_long;
+        if(!$request->search){
+        //     $shops = Shops::all();
+                $shops = \DB::table("shops")
+                ->select("shops.*", \DB::raw("6371 * acos(cos(radians(" . $lat . "))
+                * cos(radians(shops.latitude)) 
+                * cos(radians(shops.longitude) - radians(" . $long . ")) 
+                + sin(radians(" .$lat. ")) 
+                * sin(radians(shops.latitude))) AS distance"))
+                ->having('distance', '<', 10)
+                ->orderBy('distance', 'asc')
+                ->get();
+        }else{
+            // $shops = Shops::where('address', 'like', '%' . $request->search . '%')->get();
+            $shops = \DB::table("shops")
+            ->select("shops.*", \DB::raw("6371 * acos(cos(radians(" . $lat . "))
+            * cos(radians(shops.latitude)) 
+            * cos(radians(shops.longitude) - radians(" . $long . ")) 
+            + sin(radians(" .$lat. ")) 
+            * sin(radians(shops.latitude))) AS distance"))
+            ->where('address', 'like', '%' . $request->search . '%')
+            ->having('distance', '<', 20)
+            ->orderBy('distance', 'asc')
+            ->get();
+        }
+        return response()->json(['data' => $shops,'message' => 'Shops get successfully.','status' => true]);
     }
 
     public function get_one(Request $request){
@@ -72,6 +116,7 @@ class ShopController extends Controller
             'latitude'=>'required',
             'longitude'=>'required',
             'contact_number'=>'required|',
+            'shop_icon'=>'required|mimes:jpeg,jpg,bmp,png,gif,svg,pdf',
         ]);  
         if ($validator->fails()) {
             return  response()->json([
@@ -81,12 +126,23 @@ class ShopController extends Controller
             ]);
         } else {
            
+            if ($request->hasFile('shop_icon')) {
+                $shop_image = $request->file('shop_icon');
+            } 
+            $file_extension= $shop_image->getClientOriginalExtension();
+            $filename = time() . '.' . $file_extension;
+
+            # upload original image
+            Storage::put('public/shop_image/shop-icon' . $filename, (string) file_get_contents($shop_image), 'public');
+            $shopFileUrl =  Storage::url('public/shop_image/shop-icon' . $filename);
+
             $shop->shop_name = $request->shop_name;
             $shop->address = $request->address;
             $shop->city = $request->city;
             $shop->latitude = $request->latitude;
             $shop->longitude = $request->longitude;
             $shop->contact_number = $request->contact_number;
+            $shop->shop_icon_url = $shopFileUrl;
             $shop->save();
             return response()->json(['data' => $shop,'message' => 'Shop update Successfully.','status' => true]);
         }
