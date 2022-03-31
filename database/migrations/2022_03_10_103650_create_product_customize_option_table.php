@@ -19,7 +19,7 @@ class CreateProductCustomizeOptionTable extends Migration
             $table->integer('customize_type_id');
             $table->string('option_name');
             $table->string('customize_charges');
-            $table->text('description')->nullable();
+            $table->text('description')->default('');
             $table->boolean('is_defult')->default(0);
             $table->softDeletes();
             $table->timestamps();

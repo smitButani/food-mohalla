@@ -21,8 +21,8 @@ class CreateOrderTable extends Migration
             $table->integer('order_status');
             $table->integer('user_address_id');
             $table->string('payment_method')->comment('UPI, COD, etc.');
-            $table->string('payment_gateway')->nullable();
-            $table->string('payment_transaction_id')->nullable();
+            $table->string('payment_gateway')->default('');
+            $table->string('payment_transaction_id')->default('');
             $table->string('order_type')->comment('Home delivery, office, etc.');
             $table->string('order_total');
             $table->boolean('is_ongoing_order')->default(1);

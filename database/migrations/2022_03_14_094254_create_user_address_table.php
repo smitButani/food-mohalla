@@ -16,10 +16,13 @@ class CreateUserAddressTable extends Migration
         Schema::create('user_address', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->integer('user_id');
-            $table->text('full_address');
-            $table->string('zipcode');
-            $table->text('landmark');
-            $table->string('type');
+            $table->text('address');
+            $table->string('zipcode')->default('');
+            $table->text('landmark')->default('');
+            $table->string('city')->default('');
+            $table->string('state')->default('');
+            $table->string('country')->default('');
+            $table->string('type')->comment('office');
             $table->softDeletes();
             $table->timestamps();
         });

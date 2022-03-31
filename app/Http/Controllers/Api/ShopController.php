@@ -53,23 +53,9 @@ class ShopController extends Controller
     }
 
     public function list(Request $request){
-        $validator = Validator::make($request->all(), 
-        [
-            'current_lat'=> 'required',
-            'current_long'=> 'required',
-        ]);
-        if ($validator->fails()) {
-            return  response()->json([
-                'data' => $validator->messages(), 
-                'message' => 'please add valid data.', 
-                'status' => false
-            ]);
-        }
-
         $lat = $request->current_lat;
         $long = $request->current_long;
-        if(!$request->search){
-        //     $shops = Shops::all();
+        if($lat && $long && !$request->search){
                 $shops = \DB::table("shops")
                 ->select("shops.*", \DB::raw("6371 * acos(cos(radians(" . $lat . "))
                 * cos(radians(shops.latitude)) 
@@ -79,18 +65,21 @@ class ShopController extends Controller
                 ->having('distance', '<', 10)
                 ->orderBy('distance', 'asc')
                 ->get();
-        }else{
-            // $shops = Shops::where('address', 'like', '%' . $request->search . '%')->get();
+        }elseif($lat && $long && $request->search){
             $shops = \DB::table("shops")
             ->select("shops.*", \DB::raw("6371 * acos(cos(radians(" . $lat . "))
             * cos(radians(shops.latitude)) 
             * cos(radians(shops.longitude) - radians(" . $long . ")) 
             + sin(radians(" .$lat. ")) 
             * sin(radians(shops.latitude))) AS distance"))
-            ->where('address', 'like', '%' . $request->search . '%')
+            ->where('city', 'like', '%' . $request->search . '%')
             ->having('distance', '<', 20)
             ->orderBy('distance', 'asc')
             ->get();
+        }elseif($request->search && !$lat && !$long){
+            $shops = Shops::where('city', 'like', '%' . $request->search . '%')->get();
+        }else{
+            $shops = Shops::all();
         }
         return response()->json(['data' => $shops,'message' => 'Shops get successfully.','status' => true]);
     }

@@ -15,9 +15,12 @@ class UserAddressController extends Controller
         $validator = Validator::make($request->all(), 
         [
             'user_id'=>'required',
-            'full_address'=>'required',
+            'address'=>'required',
             'zipcode'=>'required',
             'landmark'=>'required',
+            'city'=>'required',
+            'state'=>'required',
+            'country'=>'required',
             'type'=>'required',
         ]);
         if ($validator->fails()) {
@@ -29,9 +32,12 @@ class UserAddressController extends Controller
         } else {
             $userAddress = new UserAddress();
             $userAddress->user_id = $request->user_id;
-            $userAddress->full_address = $request->full_address;
+            $userAddress->address = $request->address;
             $userAddress->zipcode = $request->zipcode;
             $userAddress->landmark = $request->landmark;
+            $userAddress->city = $request->city;
+            $userAddress->state = $request->state;
+            $userAddress->country = $request->country;
             $userAddress->type = $request->type;
             $userAddress->save();
         }
@@ -59,9 +65,12 @@ class UserAddressController extends Controller
         $validator = Validator::make($request->all(), 
         [
             'user_id'=>'required',
-            'full_address'=>'required',
+            'address'=>'required',
             'zipcode'=>'required',
             'landmark'=>'required',
+            'city'=>'required',
+            'state'=>'required',
+            'country'=>'required',
             'type'=>'required',
         ]);
         if ($validator->fails()) {
@@ -72,9 +81,12 @@ class UserAddressController extends Controller
             ]);
         } else {
             $userAddress->user_id = $request->user_id;
-            $userAddress->full_address = $request->full_address;
+            $userAddress->address = $request->address;
             $userAddress->zipcode = $request->zipcode;
             $userAddress->landmark = $request->landmark;
+            $userAddress->city = $request->city;
+            $userAddress->state = $request->state;
+            $userAddress->country = $request->country;
             $userAddress->type = $request->type;
             $userAddress->save();
         }
