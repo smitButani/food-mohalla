@@ -20,6 +20,7 @@ class RecommandedController extends Controller
             'thumbnail_img'=>'required|mimes:jpeg,jpg,bmp,png,gif,svg,pdf',
             'banner_img'=>'required|mimes:jpeg,jpg,bmp,png,gif,svg,pdf',
             'price'=>'required',
+            'product_id'=>'required',
         ]);  
         if ($validator->fails()) {
             return  response()->json([
@@ -49,6 +50,7 @@ class RecommandedController extends Controller
             $recommanded->thumbnail_img_url = $thumbnailFileUrl;
             $recommanded->banner_img_url = $bannerFileUrl;
             $recommanded->price = $request->price;
+            $recommanded->product_id = $request->product_id;
             $recommanded->save();
         }
         return response()->json(['data' => $recommanded,'message' => 'Recommanded Created Successfully.','status' => true]);
@@ -79,6 +81,7 @@ class RecommandedController extends Controller
             'thumbnail_img'=>'required|mimes:jpeg,jpg,bmp,png,gif,svg,pdf',
             'banner_img'=>'required|mimes:jpeg,jpg,bmp,png,gif,svg,pdf',
             'price'=>'required',
+            'product_id'=>'required',
         ]);  
         if ($validator->fails()) {
             return  response()->json([
@@ -107,6 +110,7 @@ class RecommandedController extends Controller
             $recommanded->thumbnail_img_url = $thumbnailFileUrl;
             $recommanded->banner_img_url = $bannerFileUrl;
             $recommanded->price = $request->price;
+            $recommanded->product_id = $request->product_id;
             $recommanded->save();
         }
         return response()->json(['data' => $recommanded,'message' => 'Recommanded updated Successfully.','status' => true]);
