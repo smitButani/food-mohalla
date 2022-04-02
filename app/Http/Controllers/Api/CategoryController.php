@@ -33,6 +33,23 @@ class CategoryController extends Controller
         return response()->json(['data' => $categories,'message' => 'Categories get Successfully.','status' => true]);
     }
 
+    public function categoryWishProducts(Request $request){
+        $validator = Validator::make($request->all(), 
+        [
+            'category_id'=>'required',
+        ]);  
+        if ($validator->fails()) {
+            return  response()->json([
+                'data' => $validator->messages(), 
+                'message' => 'please add valid data.', 
+                'status' => false
+            ]);
+        } else {
+            $categories = Categories::where('id',$request->category_id)->with(['product'])->get();
+        }
+        return response()->json(['data' => $categories,'message' => 'Categories with product get Successfully.','status' => true]);
+    }
+
     public function get_one(Request $request){
         $categories = Categories::where('id',$request->id)->first();
         if(!$categories){

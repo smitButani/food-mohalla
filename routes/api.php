@@ -31,7 +31,9 @@ Route::group(['prefix' => 'user', 'middleware' => 'auth:api'], function(){
 Route::get('best-offers/', 'Api\BestOfferController@list');
 Route::get('grab-best-deals/', 'Api\GrabBestDealController@list');
 Route::get('recommended/', 'Api\RecommandedController@list');
+Route::get('/', 'Api\CategoryController@list');
 Route::get('product/', 'Api\ProductController@list');
+Route::post('categories-wise-products', 'Api\CategoryController@categoryWishProducts');
 Route::get('product-wise-variants/{productId}', 'Api\ProductController@productWiseVariants');
 Route::get('product-customize-details/{productId}', 'Api\ProductController@productCustomizeDetails');
 Route::post('product-search/', 'Api\ProductController@productSearch');
@@ -65,7 +67,6 @@ Route::group(['prefix' => 'shop'], function(){
 
 // category
 Route::group(['prefix' => 'category'], function(){
-    Route::get('/', 'Api\CategoryController@list');
     Route::get('/{id}', 'Api\CategoryController@get_one');
     Route::post('/create', 'Api\CategoryController@create');
     Route::post('/update/{id}', 'Api\CategoryController@update');
