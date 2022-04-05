@@ -17,7 +17,7 @@ class CustomizeSeeder extends Seeder
         $products = Products::get();
         foreach($products as $product){
             $customizeType = ProductCustomizeType::create([
-                'product_id' => 1,
+                'product_id' => $product->id,
                 'type_name' => 'milk',
             ]);
 
@@ -45,7 +45,7 @@ class CustomizeSeeder extends Seeder
            
             // customize 2
             $customizeType_2 = ProductCustomizeType::create([
-                'product_id' => 1,
+                'product_id' => $product->id,
                 'type_name' => 'Veggies',
             ]);
 
