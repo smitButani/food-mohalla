@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Categories;
+use App\Models\Products;
 use Validator;
 
 class CategoryController extends Controller
@@ -46,9 +47,9 @@ class CategoryController extends Controller
             ]);
         } else {
             if($request->category_id > 0){
-                $categories = Categories::where('id',$request->category_id)->with(['product'])->get();
+                $categories = Products::where('category_id',$request->category_id)->get();
             }else{
-                $categories = Categories::with(['product'])->get();
+                $categories = Products::all();
             }
         }
         return response()->json(['data' => $categories,'message' => 'Categories with product get Successfully.','status' => true]);
