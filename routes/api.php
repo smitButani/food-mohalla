@@ -44,7 +44,7 @@ Route::get('offers/', 'Api\OfferController@list');
 // Cart Api List
 Route::post('/product-item-total', 'Api\CartController@productTotalCount');
 Route::post('/add-to-cart', 'Api\CartController@addToCart')->middleware('auth:api');
-Route::post('/get-cart-item', 'Api\CartController@getCart')->middleware('auth:api');
+Route::get('/get-cart-item', 'Api\CartController@getCart')->middleware('auth:api');
 
 //Address Api List
 Route::group(['prefix' => 'user-address', 'middleware' => 'auth:api'], function(){
