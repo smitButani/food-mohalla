@@ -45,7 +45,7 @@ class CategoryController extends Controller
                 'status' => false
             ]);
         } else {
-            if($request->id > 0){
+            if($request->category_id > 0){
                 $categories = Categories::where('id',$request->category_id)->with(['product'])->get();
             }else{
                 $categories = Categories::with(['product'])->get();
