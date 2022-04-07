@@ -6,12 +6,43 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Categories;
 use Validator;
+use App\Models\ProductVariant;
+use App\Models\Products;
+use App\Models\ProductCustomizeOption;
+use DB;
 
 class CartController extends Controller
 {
-    public function productTotalCount(){
-        
+    public function productTotalCount(Request $request){
+        $validator = Validator::make($request->all(), 
+        [
+            'variant_id'=>'required',
+            'product_id'=>'required',
+            'quantity' => 'required',
+        ]);
+        $customize_ids = explode(',',$request->customize_ids);
+        print_r($customize_ids);
+        if ($validator->fails()) {
+            return  response()->json([
+                'data' => $validator->messages(), 
+                'message' => 'please add valid data.', 
+                'status' => false
+            ]);
+        } else {
+           
+            // $variant_data = Products::where('id',$request->variant)->first();
+            $variant_data = ProductVariant::where('product_id',$request->product_id)->where('id',$request->variant_id)->first();
+            $customize_price = 0;
+            if(!empty($customize_ids)){
+                $customize_details_data = ProductCustomizeOption::select(DB::raw("SUM(customize_charges) as count"))->whereIn('id',$customize_ids)->first();
+                print_r($customize_details_data);
+                $customize_price = $customize_details_data->count;
+            }
+            $totalCount = ($variant_data->price + $customize_price) * $request->quantity;
+        }
+        return response()->json(['data' => $totalCount,'message' => 'Total Count Get Successfully.','status' => true]);
     }
+
     // public function create(Request $request){
     //     $validator = Validator::make($request->all(), 
     //     [

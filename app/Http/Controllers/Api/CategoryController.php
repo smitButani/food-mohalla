@@ -45,7 +45,11 @@ class CategoryController extends Controller
                 'status' => false
             ]);
         } else {
-            $categories = Categories::where('id',$request->category_id)->with(['product'])->get();
+            if($request->id > 0){
+                $categories = Categories::where('id',$request->category_id)->with(['product'])->get();
+            }else{
+                $categories = Categories::with(['product'])->get();
+            }
         }
         return response()->json(['data' => $categories,'message' => 'Categories with product get Successfully.','status' => true]);
     }

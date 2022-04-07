@@ -42,7 +42,7 @@ Route::post('product-search/', 'Api\ProductController@productSearch');
 Route::get('offers/', 'Api\OfferController@list');
 
 // Cart Api List
-
+Route::post('product-total-count', 'Api\CartController@productTotalCount');
 
 //Address Api List
 Route::group(['prefix' => 'user-address', 'middleware' => 'auth:api'], function(){
