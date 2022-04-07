@@ -42,7 +42,9 @@ Route::post('product-search/', 'Api\ProductController@productSearch');
 Route::get('offers/', 'Api\OfferController@list');
 
 // Cart Api List
-Route::post('product-total-count', 'Api\CartController@productTotalCount');
+Route::post('/product-item-total', 'Api\CartController@productTotalCount');
+Route::post('/add-to-cart', 'Api\CartController@addToCart')->middleware('auth:api');
+Route::post('/get-cart-item', 'Api\CartController@getCart')->middleware('auth:api');
 
 //Address Api List
 Route::group(['prefix' => 'user-address', 'middleware' => 'auth:api'], function(){
@@ -52,9 +54,6 @@ Route::group(['prefix' => 'user-address', 'middleware' => 'auth:api'], function(
     Route::post('/update/{id}', 'Api\UserAddressController@update');
     Route::delete('/delete/{id}', 'Api\UserAddressController@delete');
 });
-
-
-
 
 //shop
 Route::group(['prefix' => 'shop'], function(){

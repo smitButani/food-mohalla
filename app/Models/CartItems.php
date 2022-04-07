@@ -4,11 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class UserAddress extends Model
+class CartItems extends Model
 {
     protected $fillable = [
         
     ];
 
-    protected $table = 'user_address';
+    protected $table = 'cart_items';
 }
