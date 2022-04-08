@@ -8,6 +8,7 @@ use App\Models\Products;
 use App\Models\ProductVariant;
 use App\Models\Shops;
 use App\Models\ShopsProducts;
+use App\Models\ProductCustomizeType;
 use Validator;
 use Storage;
 
@@ -128,6 +129,12 @@ class ProductController extends Controller
     public function productCustomizeDetails(Request $request){
         $product_customize_details = Products::where('id',$request->productId)->with(['productCustomizeType.productCustomizeOption'])->first();
         return response()->json(['data' => $product_customize_details,'message' => 'Products variants get Successfully.','status' => true]);
+    }
+
+    public function productDetails(Request $request){
+        $product_customize = ProductCustomizeType::where('product_id',$request->productId)->with(['productCustomizeOption'])->get();
+        $product_variant = ProductVariant::where('product_id',$request->productId)->get();
+        return ['data' => ['product_customize' => $product_customize,'product_variant' => $product_variant],'message' => 'Products variants and Product Customize get Successfully.','status' => true];
     }
 
     public function productSearch(Request $request){

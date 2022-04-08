@@ -37,6 +37,7 @@ Route::post('categories-wise-products', 'Api\CategoryController@categoryWishProd
 Route::get('product-wise-variants/{productId}', 'Api\ProductController@productWiseVariants');
 Route::get('product-customize-details/{productId}', 'Api\ProductController@productCustomizeDetails');
 Route::post('product-search/', 'Api\ProductController@productSearch');
+Route::get('products-details/{productId}', 'Api\ProductController@productDetails');
 
 // Offer Api List
 Route::get('offers/', 'Api\OfferController@list');
