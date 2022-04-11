@@ -343,6 +343,7 @@ class CartController extends Controller
                 'order_status' => $orderDetails->order_status,
                 'order_total' => $orderDetails->order_total,
                 'is_ongoing_order' => $orderDetails->is_ongoing_order,
+                'id' => $orderDetails->id,
             ];
             $order[] = $data;
         }
