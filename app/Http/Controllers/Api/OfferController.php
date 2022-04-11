@@ -41,7 +41,7 @@ class OfferController extends Controller
     }
 
     public function list(Request $request){
-        $offers = Offers::all();
+        $offers = Offers::where('is_active',1)->get();
         return response()->json(['data' => $offers,'message' => 'Offers get Successfully.','status' => true]);
     }
 

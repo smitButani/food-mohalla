@@ -48,6 +48,11 @@ Route::post('/add-to-cart', 'Api\CartController@addToCart')->middleware('auth:ap
 Route::get('/get-cart-item', 'Api\CartController@getCart')->middleware('auth:api');
 Route::post('/update-cart-item', 'Api\CartController@updateCart')->middleware('auth:api');
 Route::post('/delete-cart-item', 'Api\CartController@deleteCartItem')->middleware('auth:api');
+Route::post('/payment-page', 'Api\CartController@paymentPage')->middleware('auth:api');
+Route::post('/create-order', 'Api\CartController@createOrder')->middleware('auth:api');
+Route::post('/order-details', 'Api\CartController@orderDetails')->middleware('auth:api');
+Route::post('/order-status-change', 'Api\CartController@orderStatusChange')->middleware('auth:api');
+// Route::post('/order-lists', 'Api\CartController@orderLists')->middleware('auth:api');
 
 //Address Api List
 Route::group(['prefix' => 'user-address', 'middleware' => 'auth:api'], function(){
