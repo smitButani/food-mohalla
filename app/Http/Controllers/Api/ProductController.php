@@ -61,8 +61,20 @@ class ProductController extends Controller
     }
 
     public function list(Request $request){
-        $Productss = Products::all();
-        return response()->json(['data' => $Productss,'message' => 'Productss get Successfully.','status' => true]);
+        $validator = Validator::make($request->all(), 
+        [
+            'shop_id'=>'required',
+        ]);
+        if ($validator->fails()) {
+            return  response()->json([
+                'data' => $validator->messages(), 
+                'message' => 'please add valid data.', 
+                'status' => false
+            ]);
+        } else {
+            $products = Products::where('shop_id',$request->shop_id)->get();
+        }
+        return response()->json(['data' => $products,'message' => 'Products get Successfully.','status' => true]);
     }
 
     public function get_one(Request $request){
@@ -133,8 +145,8 @@ class ProductController extends Controller
 
     public function productDetails(Request $request){
         $product_customize = ProductCustomizeType::where('product_id',$request->productId)->with(['productCustomizeOption'])->get();
-        $product_variant = ProductVariant::where('product_id',$request->productId)->get();
-        return ['data' => ['product_customize' => $product_customize,'product_variant' => $product_variant],'message' => 'Products variants and Product Customize get Successfully.','status' => true];
+        // $product_variant = ProductVariant::where('product_id',$request->productId)->get();
+        return ['data' => $product_customize,'message' => 'Products variants and Product Customize get Successfully.','status' => true];
     }
 
     public function productSearch(Request $request){

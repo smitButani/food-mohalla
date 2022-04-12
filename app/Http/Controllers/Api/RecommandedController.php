@@ -57,7 +57,19 @@ class RecommandedController extends Controller
     }
 
     public function list(Request $request){
-        $recommanded = Recommanded::all();
+        $validator = Validator::make($request->all(), 
+        [
+            'shop_id'=>'required',
+        ]);  
+        if ($validator->fails()) {
+            return  response()->json([
+                'data' => $validator->messages(), 
+                'message' => 'please add valid data.', 
+                'status' => false
+            ]);
+        } else {
+            $recommanded = Recommanded::where('shop_id',$request->shop_id)->get();
+        }
         return response()->json(['data' => $recommanded,'message' => 'Recommanded get Successfully.','status' => true]);
     }
 

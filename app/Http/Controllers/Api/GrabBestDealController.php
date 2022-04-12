@@ -55,7 +55,19 @@ class GrabBestDealController extends Controller
     }
 
     public function list(Request $request){
-        $grabBestDeal = GrabBestDeal::all();
+        $validator = Validator::make($request->all(), 
+        [
+            'shop_id'=>'required',
+        ]);  
+        if ($validator->fails()) {
+            return  response()->json([
+                'data' => $validator->messages(), 
+                'message' => 'please add valid data.', 
+                'status' => false
+            ]);
+        } else {
+            $grabBestDeal = GrabBestDeal::where('shop_id',$request->shop_id)->get();
+        }
         return response()->json(['data' => $grabBestDeal,'message' => 'Grab Best Deal get Successfully.','status' => true]);
     }
 

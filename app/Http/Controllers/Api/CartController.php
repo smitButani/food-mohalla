@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Categories;
 use Validator;
-use App\Models\ProductVariant;
 use App\Models\Products;
 use App\Models\ProductCustomizeOption;
 use App\Models\GrabBestDeal;
@@ -24,7 +23,6 @@ class CartController extends Controller
     public function productTotalCount(Request $request){
         $validator = Validator::make($request->all(), 
         [
-            'variant_id'=>'required',
             'product_id'=>'required',
             'quantity' => 'required',
         ]);
@@ -36,14 +34,13 @@ class CartController extends Controller
                 'status' => false
             ]);
         } else {
-            // $variant_data = Products::where('id',$request->variant)->first();
-            $variant_data = ProductVariant::where('product_id',$request->product_id)->where('id',$request->variant_id)->first();
+            $product_data = Products::where('id',$request->product_id)->first();
             $customize_price = 0;
             if(!empty($customize_ids)){
                 $customize_details_data = ProductCustomizeOption::select(DB::raw("SUM(customize_charges) as count"))->whereIn('id',$customize_ids)->first();
                 $customize_price = $customize_details_data->count;
             }
-            $totalCount = ($variant_data->price + $customize_price) * $request->quantity;
+            $totalCount = ($product_data->price + $customize_price) * $request->quantity;
         }
         return response()->json(['data' => $totalCount,'message' => 'Total Count Get Successfully.','status' => true]);
     }
@@ -78,7 +75,6 @@ class CartController extends Controller
             $validator = Validator::make($request->all(), 
             [
                 'product_id'=>'required',
-                'variant_id'=>'required',
                 'shop_id'=>'required',
                 'quantity' => 'required',
             ]);
@@ -92,8 +88,8 @@ class CartController extends Controller
             } else {
                 $user_id = auth()->user()->id;
                 $customize_price = 0;
-                $variant_data = ProductVariant::where('product_id',$request->product_id)->where('id',$request->variant_id)->first();
-                if(!$variant_data){
+                $product_data = Products::where('id',$request->product_id)->first();
+                if(!$product_data){
                     return  response()->json([
                         'data' => 'invalid data parse.', 
                         'message' => 'please add valid data.', 
@@ -104,12 +100,11 @@ class CartController extends Controller
                     $customize_details_data = ProductCustomizeOption::select(DB::raw("SUM(customize_charges) as count"))->whereIn('id',$customize_ids)->first();
                     $customize_price = $customize_details_data->count; 
                 }
-                $totalCount = ($variant_data->price + $customize_price);
+                $totalCount = ($product_data->price + $customize_price);
                 $cartItems = new CartItems();
                 $cartItems->user_id = $user_id;
                 $cartItems->shop_id = $request->shop_id;
                 $cartItems->product_id = $request->product_id;
-                $cartItems->product_variant_id = $request->variant_id;
                 $cartItems->quantity = $request->quantity;
                 $cartItems->item_price = $totalCount;
                 $cartItems->save();
@@ -296,7 +291,6 @@ class CartController extends Controller
                 $orderItem->shop_id = $item->shop_id;
                 if($item->product_id){
                     $orderItem->product_id = $item->product_id;
-                    $orderItem->product_variant_id = $item->product_variant_id;
                 }
                 if($item->grab_best_deal_id){
                     $orderItem->grab_best_deal_id = $item->grab_best_deal_id;

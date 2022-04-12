@@ -16,9 +16,45 @@ class CustomizeSeeder extends Seeder
     {
         $products = Products::get();
         foreach($products as $product){
+            // is_required
+            $customizeType = ProductCustomizeType::create([
+                'product_id' => $product->id,
+                'type_name' => 'size',
+                'is_optional' => 0,
+                'control_type' => 'radio',
+            ]);
+
+            ProductCustomizeOption::create([
+                'product_id' => $product->id,
+                'customize_type_id' => $customizeType->id,
+                'option_name' => 'small',
+                'customize_charges' => 0,
+                'is_defult' => 1,
+                'description' => 'Size Small(product price + size charges)'
+            ]);
+            ProductCustomizeOption::create([
+                'product_id' => $product->id,
+                'customize_type_id' => $customizeType->id,
+                'option_name' => 'medium',
+                'customize_charges' => 40,
+                'is_defult' => 0,
+                'description' => 'size Medium(product price + size charges)'
+            ]);
+            ProductCustomizeOption::create([
+                'product_id' => $product->id,
+                'customize_type_id' => $customizeType->id,
+                'option_name' => 'large',
+                'customize_charges' => 80,
+                'is_defult' => 0,
+                'description' => 'size large(product price + size charges)'
+            ]);
+
+            // customize 1
             $customizeType = ProductCustomizeType::create([
                 'product_id' => $product->id,
                 'type_name' => 'milk',
+                'is_optional' => 1,
+                'control_type' => 'checkbox',
             ]);
 
             ProductCustomizeOption::create([
@@ -47,6 +83,8 @@ class CustomizeSeeder extends Seeder
             $customizeType_2 = ProductCustomizeType::create([
                 'product_id' => $product->id,
                 'type_name' => 'Veggies',
+                'is_optional' => 1,
+                'control_type' => 'checkbox',
             ]);
 
             ProductCustomizeOption::create([
@@ -76,6 +114,29 @@ class CustomizeSeeder extends Seeder
                 'option_name' => 'cheess',
                 'customize_charges' => 30,
                 'description' => 'extra cheess'
+            ]);
+
+            // customize 3
+            $customizeType_2 = ProductCustomizeType::create([
+                'product_id' => $product->id,
+                'type_name' => 'Extra',
+                'is_optional' => 1,
+                'control_type' => 'checkbox',
+            ]);
+
+            ProductCustomizeOption::create([
+                'product_id' => $product->id,
+                'customize_type_id' => $customizeType_2->id,
+                'option_name' => 'souce',
+                'customize_charges' => 5,
+                'description' => 'extra souce'
+            ]);
+            ProductCustomizeOption::create([
+                'product_id' => $product->id,
+                'customize_type_id' => $customizeType_2->id,
+                'option_name' => 'mayo',
+                'customize_charges' => 5,
+                'description' => 'extra mayonnaise'
             ]);
         }
     }

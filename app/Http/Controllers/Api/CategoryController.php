@@ -30,7 +30,19 @@ class CategoryController extends Controller
     }
 
     public function list(Request $request){
-        $categories = Categories::all();
+        $validator = Validator::make($request->all(), 
+        [
+            'shop_id'=>'required',
+        ]);  
+        if ($validator->fails()) {
+            return  response()->json([
+                'data' => $validator->messages(), 
+                'message' => 'please add valid data.', 
+                'status' => false
+            ]);
+        } else {
+            $categories = Categories::where('shop_id',$request->shop_id)->get();
+        }
         return response()->json(['data' => $categories,'message' => 'Categories get Successfully.','status' => true]);
     }
 

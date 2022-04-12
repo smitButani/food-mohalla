@@ -73,7 +73,7 @@ class ShopController extends Controller
             + sin(radians(" .$lat. ")) 
             * sin(radians(shops.latitude))) AS distance"))
             ->where('city', 'like', '%' . $request->search . '%')
-            ->having('distance', '<', 20)
+            ->having('distance', '<', 3)
             ->orderBy('distance', 'asc')
             ->get();
         }elseif($request->search && !$lat && !$long){
