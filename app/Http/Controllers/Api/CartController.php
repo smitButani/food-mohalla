@@ -16,6 +16,7 @@ use App\Models\Order;
 use App\Models\OrderItemsCustomize;
 use App\Models\Shops;
 use App\Models\UserAddress;
+use App\Models\Offers;
 use DB;
 
 class CartController extends Controller
@@ -96,7 +97,7 @@ class CartController extends Controller
                         'status' => false
                     ]);
                 }
-                if(!empty($customize_ids)){
+                if(!empty($request->customize_ids)){
                     $customize_details_data = ProductCustomizeOption::select(DB::raw("SUM(customize_charges) as count"))->whereIn('id',$customize_ids)->first();
                     $customize_price = $customize_details_data->count; 
                 }
@@ -108,7 +109,7 @@ class CartController extends Controller
                 $cartItems->quantity = $request->quantity;
                 $cartItems->item_price = $totalCount;
                 $cartItems->save();
-                if(!empty($customize_ids) && $cartItems){
+                if(!empty($request->customize_ids) && $cartItems){
                     foreach($customize_ids as $id){
                         $CartItemsCustomize = new CartItemsCustomize();
                         $CartItemsCustomize->cart_item_id = $cartItems->id;
@@ -210,17 +211,57 @@ class CartController extends Controller
     //orders 
     public function paymentPage(Request $request){
         // 'promoCode';
-        // 'promoCode';
+        $user_id = auth()->user()->id;
         $allCartItems = CartItems::where('user_id',$user_id)->get();
+        $total_price = 0;
         foreach($allCartItems as $item){
             $total_price += $item->item_price * $item->quantity;
         }
 
-        if($request->promocode){
-            
+        
+        $data = [];
+
+        if($request->promo_code){
+            $offer =  Offers::where('coupon_code',$request->promo_code)->where('is_active',1)->first();
+            if($offer){
+                    if($offer->min_cart_price > 0){
+                        if($offer->min_cart_price < $total_price){
+                            // check cart total
+                            if($offer->discount_type == 'p'){
+                                $discount_amount = $total_price * $offer->discount_amount / 100;
+                                $discount_amount = ($discount_amount > $offer->max_discount_amount) ? $offer->max_discount_amount : $dicount_amount;
+                            }
+                            if($offer->discount_type == 'f'){
+                                $discount_amount = $offer->discount_amount;
+                            }
+                        }else{
+                            $data['promo_code_error_message'] = 'Your cart Items price Less then offer amount.';
+                        }
+                    }else{
+                        if($offer->discount_type == 'p'){
+                            $discount_amount = $total_price * $offer->discount_amount /100 ;
+                        }
+                        if($offer->discount_type == 'f'){
+                            $discount_amount = $offer->discount_amount;
+                        }
+                    }
+            }else{
+                $data['promo_code_error_message'] = 'Invalid Promo code.';
+            }
         }
 
-        return response()->json(['data' => 'deleted','item_total'=> $total_price,'message' => 'Cart Items Deleted Successfully.','status' => true]);
+        $GST = $total_price * 18/100;
+        
+        $total_payable_amount = round($GST + ($total_price - ($discount_amount ?? 0)));
+
+        $data['purchase_price'] = $total_price;
+        $data['GST'] = $GST;
+        $data['total_payable_amount'] = $total_payable_amount;
+        if(isset($discount_amount) && $discount_amount > 0){
+            $data['discount_amount'] = (int)$discount_amount;
+        }
+
+        return response()->json(['data' => $data,'message' => 'Payment Page Details Successfully.','status' => true]);
     }
 
     public function checkPromocode(Request $request){
@@ -236,6 +277,7 @@ class CartController extends Controller
             'user_address_id'=>'required',
             'payment_method'=>'required',
             'order_type'=>'required',
+            'order_total' => 'required'
         ]);
         if ($validator->fails()) {
             return  response()->json([
@@ -273,12 +315,12 @@ class CartController extends Controller
             $order->payment_gateway = $request->payment_gateway;
             $order->payment_transaction_id = $request->payment_transaction_id;
         }
-        $allCartItems = CartItems::where('user_id',$user_id)->get();
-        $total_price = 0;
-        foreach($allCartItems as $item){
-            $total_price += $item->item_price * $item->quantity;
-        }
-        $order->order_total = $total_price;
+        // $allCartItems = CartItems::where('user_id',$user_id)->get();
+        // // $total_price = 0;
+        // // foreach($allCartItems as $item){
+        // //     $total_price += $item->item_price * $item->quantity;
+        // // }
+        $order->order_total = $request->order_total;
         $order->save();
 
         if($order){
@@ -298,7 +340,7 @@ class CartController extends Controller
                 $orderItem->item_price = $item->item_price;
                 $orderItem->quantity = $item->quantity;
                 $orderItem->save();
-                $total_price += $item->item_price * $item->quantity;
+                // $total_price += $item->item_price * $item->quantity;
                 
                 $cartItemsCustomizes = CartItemsCustomize::where('cart_item_id',$item->id)->get();
                 if($cartItemsCustomizes){
@@ -313,7 +355,7 @@ class CartController extends Controller
                 CartItemsCustomize::where('cart_item_id',$item->id)->delete();
             }
             CartItems::where('user_id',$user_id)->delete();
-            $order->order_total = $total_price;
+            $order->order_total = $request->order_total;
             $order->is_ongoing_order = 1;
             $order->save();
         }

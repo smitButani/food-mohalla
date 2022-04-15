@@ -19,7 +19,11 @@ class OfferController extends Controller
             'coupon_code'=>'required',
             'expaire_at'=>'required',
             'valid_for_item'=>'required',
-            'discount_amount'=>'required'
+            'discount_amount'=>'required',
+            'is_active' => 'required',
+            'discount_type' => 'required',
+            'min_cart_price' => 'required',
+            'max_discount_amount' => 'required'
         ]);
         if ($validator->fails()) {
             return  response()->json([
@@ -35,6 +39,10 @@ class OfferController extends Controller
             $offers->expaire_at = $request->expaire_at;
             $offers->discount_amount = $request->discount_amount;
             $offers->valid_for_item = $request->valid_for_item;
+            $offers->is_active = $request->is_active;
+            $offers->discount_type = $request->discount_type;
+            $offers->min_cart_price = $request->min_cart_price;
+            $offers->max_discount_amount = $request->max_discount_amount;
             $offers->save();
         }
         return response()->json(['data' => $offers,'message' => 'Offer Created Successfully.','status' => true]);
