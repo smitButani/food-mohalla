@@ -247,6 +247,7 @@ class CartController extends Controller
                 $total_price += $item->item_price * $item->quantity;
             }
             $data = [];
+            $discount_amount = 0;
             $offer =  Offers::where('coupon_code',$request->promo_code)->where('is_active',1)->first();
             if($offer){
                     if($offer->min_cart_price > 0){
@@ -274,7 +275,8 @@ class CartController extends Controller
                 $data['promo_code_error_message'] = 'Invalid Promo code.';
             }
         }
-        return response()->json(['data' => $data,'message' => 'Payment Page Details Successfully.','status' => true]);
+        $data['discount_amount'] = $discount_amount;
+        return response()->json(['data' => $data,'message' => 'Promo code check Successfully.','status' => true]);
     }
 
     public function createOrder(Request $request){
