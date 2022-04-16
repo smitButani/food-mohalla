@@ -217,11 +217,36 @@ class CartController extends Controller
         foreach($allCartItems as $item){
             $total_price += $item->item_price * $item->quantity;
         }
-
-        
         $data = [];
+        $GST = $total_price * 18/100;
+        $total_payable_amount = round($GST + ($total_price - ($discount_amount ?? 0)));
+        $data['purchase_price'] = $total_price;
+        $data['GST'] = $GST;
+        $data['total_payable_amount'] = $total_payable_amount;
+        return response()->json(['data' => $data,'message' => 'Payment Page Details Successfully.','status' => true]);
+    }
 
-        if($request->promo_code){
+    public function checkPromocode(Request $request){
+        $validator = Validator::make($request->all(), 
+        [
+            'promo_code'=>'required',
+        ]);
+        if ($validator->fails()) {
+            return  response()->json([
+                'data' => $validator->messages(), 
+                'message' => 'please add valid data.', 
+                'status' => false
+            ]);
+        } else {
+            $user_id = auth()->user()->id;
+
+            $allCartItems = CartItems::where('user_id',$user_id)->get();
+
+            $total_price = 0;
+            foreach($allCartItems as $item){
+                $total_price += $item->item_price * $item->quantity;
+            }
+            $data = [];
             $offer =  Offers::where('coupon_code',$request->promo_code)->where('is_active',1)->first();
             if($offer){
                     if($offer->min_cart_price > 0){
@@ -249,23 +274,7 @@ class CartController extends Controller
                 $data['promo_code_error_message'] = 'Invalid Promo code.';
             }
         }
-
-        $GST = $total_price * 18/100;
-        
-        $total_payable_amount = round($GST + ($total_price - ($discount_amount ?? 0)));
-
-        $data['purchase_price'] = $total_price;
-        $data['GST'] = $GST;
-        $data['total_payable_amount'] = $total_payable_amount;
-        if(isset($discount_amount) && $discount_amount > 0){
-            $data['discount_amount'] = (int)$discount_amount;
-        }
-
         return response()->json(['data' => $data,'message' => 'Payment Page Details Successfully.','status' => true]);
-    }
-
-    public function checkPromocode(Request $request){
-        
     }
 
     public function createOrder(Request $request){
@@ -362,7 +371,7 @@ class CartController extends Controller
         return response()->json(['data' => $order, 'message' => 'Order Placed Successfully.','status' => true]);
     }
 
-    public function orderDetails(Request $request){
+    public function orderList(Request $request){
         $user_id = auth()->user()->id;
         $orderDetails = Order::where('user_id',$user_id)->get();
         $order = [];
@@ -383,7 +392,57 @@ class CartController extends Controller
             ];
             $order[] = $data;
         }
-        return response()->json(['data' => $order, 'message' => 'Order get Successfully.','status' => true]);
+        return response()->json(['data' => $order, 'message' => 'Orders get Successfully.','status' => true]);
+    }
+
+    public function orderDetails(Request $request){
+        $validator = Validator::make($request->all(), 
+        [
+            'order_id'=>'required',
+        ]);
+         if ($validator->fails()) {
+            return  response()->json([
+                'data' => $validator->messages(), 
+                'message' => 'please add valid data.', 
+                'status' => false
+            ]);
+        }
+        $user_id = auth()->user()->id;
+        $orderDetails = Order::where('id',$request->order_id)->with(['order_item.product'])->first();
+        
+        $order_item_name = [];
+        $items = [];
+        $order_item_with_qty = [];
+        $item_price = 0;
+        foreach($orderDetails->order_item as $item){
+            $order_item_name[] = $item->product->name;
+            $order_item_with_qty[] = $item->quantity.' '.$item->product->name;
+            $item_price += $item->item_price * $item->quantity;
+            $items[] = $item;
+        }
+        $order = [];
+        $user_address = UserAddress::where('id',$orderDetails->user_address_id)->first();
+        $order = [
+            'shop_address' => Shops::where('id',$orderDetails->shop_id)->first()->address,
+            'user_address' => $user_address,
+            'order_number' => $orderDetails->order_number,
+            'payment_method' => $orderDetails->payment_method,
+            'payment_gateway' => $orderDetails->payment_gateway,
+            'payment_transaction_id' => $orderDetails->payment_transaction_id,
+            'order_type' => $orderDetails->order_type,
+            'order_status' => $orderDetails->order_status,
+            'order_total' => $orderDetails->order_total,
+            'is_ongoing_order' => $orderDetails->is_ongoing_order,
+            'id' => $orderDetails->id,
+            'order_item_count' => count($orderDetails->order_item),
+            'order_items' => implode(',',$order_item_name),
+            'order_items_with_qty' => implode(' + ',$order_item_with_qty),
+            'item_total' => $item_price,
+            'GST' => $item_price*18/100,
+            'discount_amount' => ($orderDetails->order_total - ($item_price+$item_price*18/100) > 0) ? ($orderDetails->order_total - ($item_price+$item_price*18/100) > 0) : 0,
+            'order_items' => $items,
+        ];
+        return response()->json(['data' => $order, 'message' => 'Orders get Successfully.','status' => true]);
     }
 
     public function orderStatusChange(Request $request){

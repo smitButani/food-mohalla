@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Recommanded;
+use App\Models\Products;
 use Validator;
 use Storage;
 
@@ -20,7 +21,7 @@ class RecommandedController extends Controller
             'thumbnail_img'=>'required|mimes:jpeg,jpg,bmp,png,gif,svg,pdf',
             'banner_img'=>'required|mimes:jpeg,jpg,bmp,png,gif,svg,pdf',
             'price'=>'required',
-            'product_id'=>'required',
+            'shop_id'=>'required',
         ]);  
         if ($validator->fails()) {
             return  response()->json([
@@ -39,10 +40,10 @@ class RecommandedController extends Controller
             $banner_filename = time() . '.' . $banner_file_extension;
 
             # upload original image
-            Storage::put('public/grab-best-deal/thumb/GBD-' . $thumbnail_filename, (string) file_get_contents($thumbnail_image), 'public');
-            Storage::put('public/grab-best-deal/banner/GBD-' . $banner_filename, (string) file_get_contents($banner_image), 'public');
-            $thumbnailFileUrl =  Storage::url('public/grab-best-deal/thumb/GBD-' . $thumbnail_filename);
-            $bannerFileUrl =  Storage::url('public/grab-best-deal/banner/GBD-' . $banner_filename);
+            Storage::put('public/recommanded/thumb/RD-' . $thumbnail_filename, (string) file_get_contents($thumbnail_image), 'public');
+            Storage::put('public/recommanded/banner/RD-' . $banner_filename, (string) file_get_contents($banner_image), 'public');
+            $thumbnailFileUrl =  Storage::url('public/recommanded/thumb/RD-' . $thumbnail_filename);
+            $bannerFileUrl =  Storage::url('public/recommanded/banner/RD-' . $banner_filename);
             
             $recommanded = new Recommanded();
             $recommanded->combo_name = $request->combo_name;
@@ -50,8 +51,27 @@ class RecommandedController extends Controller
             $recommanded->thumbnail_img_url = $thumbnailFileUrl;
             $recommanded->banner_img_url = $bannerFileUrl;
             $recommanded->price = $request->price;
-            $recommanded->product_id = $request->product_id;
+            $recommanded->product_id = 0;
+            $recommanded->shop_id = $request->shop_id;
             $recommanded->save();
+            if($recommanded){
+                # upload original image
+                Storage::put('public/products/RD-' . $thumbnail_filename, (string) file_get_contents($thumbnail_image), 'public');
+                $productFileUrl =  Storage::url('public/products/RD-' . $thumbnail_filename);
+    
+                $products = new Products();
+                $products->shop_id = $request->shop_id;
+                $products->category_id = 0;
+                $products->name = $request->combo_name;
+                $products->description = $request->description;
+                $products->image_url = $productFileUrl;
+                $products->price = $request->price;
+                $products->is_recommended = 1;
+                $products->save();
+
+                $recommanded->product_id = $products->id;
+                $recommanded->save();
+            }
         }
         return response()->json(['data' => $recommanded,'message' => 'Recommanded Created Successfully.','status' => true]);
     }
