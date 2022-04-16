@@ -61,7 +61,7 @@ class CategoryController extends Controller
             if($request->category_id > 0){
                 $categories = Products::where('category_id',$request->category_id)->get();
             }else{
-                $categories = Products::all();
+                $categories = Products::where('is_recommended',0)->get();
             }
         }
         return response()->json(['data' => $categories,'message' => 'Categories with product get Successfully.','status' => true]);
