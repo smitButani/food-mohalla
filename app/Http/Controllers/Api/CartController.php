@@ -314,6 +314,11 @@ class CartController extends Controller
             ]);
         }
 
+        $allCartItems = CartItems::where('user_id',$user_id)->get();
+        if(!count($allCartItems))
+        {
+            return response()->json(['data' => [], 'message' => 'Cart item not found.','status' => true]);
+        }
         $order = new Order();
         $order->shop_id = $request->shop_id;
         $order->user_id = $user_id;
@@ -416,11 +421,13 @@ class CartController extends Controller
         $items = [];
         $order_item_with_qty = [];
         $item_price = 0;
-        foreach($orderDetails->order_item as $item){
-            $order_item_name[] = $item->product->name;
-            $order_item_with_qty[] = $item->quantity.' '.$item->product->name;
-            $item_price += $item->item_price * $item->quantity;
-            $items[] = $item;
+        if(isset($orderDetails->order_item)){
+            foreach($orderDetails->order_item as $item){
+                $order_item_name[] = $item->product->name;
+                $order_item_with_qty[] = $item->quantity.' '.$item->product->name;
+                $item_price += $item->item_price * $item->quantity;
+                $items[] = $item;
+            }
         }
         $order = [];
         $user_address = UserAddress::where('id',$orderDetails->user_address_id)->first();
