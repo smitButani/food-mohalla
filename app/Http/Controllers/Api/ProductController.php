@@ -72,7 +72,7 @@ class ProductController extends Controller
                 'status' => false
             ]);
         } else {
-            $products = Products::where('shop_id',$request->shop_id)->where('is_recommended',1)->get();
+            $products = Products::where('shop_id',$request->shop_id)->where('is_recommended',0)->get();
         }
         return response()->json(['data' => $products,'message' => 'Products get Successfully.','status' => true]);
     }
