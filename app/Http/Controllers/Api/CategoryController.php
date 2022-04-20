@@ -50,6 +50,7 @@ class CategoryController extends Controller
         $validator = Validator::make($request->all(), 
         [
             'category_id'=>'required',
+            'shop_id'=>'required',
         ]);  
         if ($validator->fails()) {
             return  response()->json([
@@ -59,9 +60,9 @@ class CategoryController extends Controller
             ]);
         } else {
             if($request->category_id > 0){
-                $categories = Products::where('category_id',$request->category_id)->get();
+                $categories = Products::where('shop_id',$request->shop_id)->where('category_id',$request->category_id)->get();
             }else{
-                $categories = Products::where('is_recommended',0)->get();
+                $categories = Products::where('shop_id',$request->shop_id)->where('is_recommended',0)->get();
             }
         }
         return response()->json(['data' => $categories,'message' => 'Categories with product get Successfully.','status' => true]);

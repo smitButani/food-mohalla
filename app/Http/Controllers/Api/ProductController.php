@@ -150,10 +150,22 @@ class ProductController extends Controller
     }
 
     public function productSearch(Request $request){
-        if(!$request->search){
-            $products = Products::all();
-        }else{
-            $products = Products::where('name', 'like', '%' . $request->search . '%')->get();
+        $validator = Validator::make($request->all(), 
+        [
+            'shop_id'=>'required',
+        ]);
+        if ($validator->fails()) {
+            return  response()->json([
+                'data' => $validator->messages(), 
+                'message' => 'please add valid data.', 
+                'status' => false
+            ]);
+        } else {
+            if(!$request->search){
+                $products = Products::where('shop_id',$request->shop_id)->get();
+            }else{
+                $products = Products::where('shop_id',$request->shop_id)->where('name', 'like', '%' . $request->search . '%')->get();
+            }
         }
         return response()->json(['data' => $products,'message' => 'Products get Successfully.','status' => true]);
     }

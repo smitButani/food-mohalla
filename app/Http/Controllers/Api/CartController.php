@@ -16,8 +16,10 @@ use App\Models\Order;
 use App\Models\OrderItemsCustomize;
 use App\Models\Shops;
 use App\Models\UserAddress;
+use App\Models\DeliveryBoy;
 use App\Models\Offers;
 use DB;
+use Carbon\Carbon;
 
 class CartController extends Controller
 {
@@ -210,20 +212,58 @@ class CartController extends Controller
     
     //orders 
     public function paymentPage(Request $request){
-        // 'promoCode';
-        $user_id = auth()->user()->id;
-        $allCartItems = CartItems::where('user_id',$user_id)->get();
-        $total_price = 0;
-        foreach($allCartItems as $item){
-            $total_price += $item->item_price * $item->quantity;
+        $validator = Validator::make($request->all(), 
+        [
+            'current_lat'=>'required',
+            'current_long'=>'required',
+            'shop_id'=> 'required'
+        ]);  
+        if ($validator->fails()) {
+            return  response()->json([
+                'data' => $validator->messages(), 
+                'message' => 'please add valid data.', 
+                'status' => false
+            ]);
+        } else {
+            $user_lat = $request->current_lat;
+            $user_long = $request->current_long;
+            // 'promoCode';
+            $user_id = auth()->user()->id;
+            $allCartItems = CartItems::where('user_id',$user_id)->get();
+            $total_price = 0;
+            foreach($allCartItems as $item){
+                $total_price += $item->item_price * $item->quantity;
+            }
+            $data = [];
+            $shop = Shops::where('id',$request->shop_id)->first();
+            $latitudeFrom = $shop->latitude;
+            $longitudeFrom =  $shop->longitude;
+            $latitudeTo = $user_lat;
+            $longitudeTo = $user_long;
+            $GST = $total_price * 18/100;
+            $data['purchase_price'] = $total_price;
+            $data['GST'] = $GST;
+            $charges = 15;
+            $data['delivery_distance'] = round($this->checkDisctranceCharges($latitudeFrom, $longitudeFrom, $latitudeTo, $longitudeTo),2);
+            $data['per_km_charges'] = $charges;
+            $data['delivery_charges'] = round($this->checkDisctranceCharges($latitudeFrom, $longitudeFrom, $latitudeTo, $longitudeTo)*$charges);
+            $total_payable_amount = round($GST + $data['delivery_charges'] +($total_price - ($discount_amount ?? 0)));
+            $data['total_payable_amount'] = $total_payable_amount;
         }
-        $data = [];
-        $GST = $total_price * 18/100;
-        $total_payable_amount = round($GST + ($total_price - ($discount_amount ?? 0)));
-        $data['purchase_price'] = $total_price;
-        $data['GST'] = $GST;
-        $data['total_payable_amount'] = $total_payable_amount;
         return response()->json(['data' => $data,'message' => 'Payment Page Details Successfully.','status' => true]);
+    }
+
+    public function checkDisctranceCharges($latitudeFrom, $longitudeFrom, $latitudeTo, $longitudeTo, $earthRadius = 6371000)
+    {
+        // convert from degrees to radians
+        $theta = $longitudeFrom - $longitudeTo;
+        $dist = sin(deg2rad($latitudeFrom)) * sin(deg2rad($latitudeTo)) +  cos(deg2rad($latitudeFrom)) * cos(deg2rad($latitudeTo)) * cos(deg2rad($theta));
+        $dist = acos($dist);
+        $dist = rad2deg($dist);
+        $miles = $dist * 60 * 1.1515;
+        
+        $distance = ($miles * 1.609344);
+        return $distance;
     }
 
     public function checkPromocode(Request $request){
@@ -288,7 +328,9 @@ class CartController extends Controller
             'user_address_id'=>'required',
             'payment_method'=>'required',
             'order_type'=>'required',
-            'order_total' => 'required'
+            'current_lat' => 'required',
+            'current_long' => 'required',
+            'discount_amount' => 'required',
         ]);
         if ($validator->fails()) {
             return  response()->json([
@@ -319,6 +361,13 @@ class CartController extends Controller
         {
             return response()->json(['data' => [], 'message' => 'Cart item not found.','status' => true]);
         }
+
+        $shop = Shops::where('id',$request->shop_id)->first();
+        $latitudeFrom = $shop->latitude;
+        $longitudeFrom =  $shop->longitude;
+        $latitudeTo = $request->current_lat;
+        $longitudeTo = $request->current_long;
+
         $order = new Order();
         $order->shop_id = $request->shop_id;
         $order->user_id = $user_id;
@@ -327,16 +376,33 @@ class CartController extends Controller
         $order->user_address_id = $request->user_address_id;
         $order->payment_method = $request->payment_method;
         $order->order_type = $request->order_type;
+        $order->discount_amount = $request->discount_amount;
+        $order->promo_code = $request->promo_code;
         if($order->payment_method == 'UPI'){
             $order->payment_gateway = $request->payment_gateway;
             $order->payment_transaction_id = $request->payment_transaction_id;
         }
-        // $allCartItems = CartItems::where('user_id',$user_id)->get();
-        // // $total_price = 0;
-        // // foreach($allCartItems as $item){
-        // //     $total_price += $item->item_price * $item->quantity;
-        // // }
-        $order->order_total = $request->order_total;
+
+        //discoun amount
+        $dicount_amount = round($request->discount_amount);
+
+        //delivery charges 
+        $charges = 15;
+        $order->delivery_distance = round($this->checkDisctranceCharges($latitudeFrom, $longitudeFrom, $latitudeTo, $longitudeTo),2);
+        $order->delivery_charges = round($this->checkDisctranceCharges($latitudeFrom, $longitudeFrom, $latitudeTo, $longitudeTo),2)*$charges;
+
+        //GST charges 
+        $allCartItems = CartItems::where('user_id',$user_id)->get();
+        $total_price = 0;
+        foreach($allCartItems as $item){
+            $total_price += $item->item_price * $item->quantity;
+        }
+
+        $GST = $total_price * 18/100;
+        $order->gst_charges = $GST;
+
+        $order->item_total = $total_price;
+        $order->order_total = ($total_price + $GST + $order->delivery_charges - $dicount_amount);
         $order->save();
 
         if($order){
@@ -371,7 +437,6 @@ class CartController extends Controller
                 CartItemsCustomize::where('cart_item_id',$item->id)->delete();
             }
             CartItems::where('user_id',$user_id)->delete();
-            $order->order_total = $request->order_total;
             $order->is_ongoing_order = 1;
             $order->save();
         }
@@ -380,9 +445,21 @@ class CartController extends Controller
 
     public function orderList(Request $request){
         $user_id = auth()->user()->id;
-        $orderDetails = Order::where('user_id',$user_id)->get();
+        $orderDetails = Order::where('user_id',$user_id)->with(['order_item'])->get();
         $order = [];
         foreach($orderDetails as $orderDetails){
+            $items = [];
+            $item_price = 0;
+            if(isset($orderDetails->order_item)){
+                foreach($orderDetails->order_item as $item){
+                    if($item->grab_best_deal_id){
+                        $item['product'] = $item->grab_best_deal_id ?  GrabBestDeal::select('deal_name as name','description','thumbnail_img_url as image_url')->where('id',$item->grab_best_deal_id)->first() : [];
+                    }else{
+                        $item['product'] = $item->product_id ? Products::select('name','description','image_url')->where('id',$item->product_id)->first() : [] ;
+                    }
+                    $items[] = $item;
+                }
+            }
             $user_address = UserAddress::where('id',$orderDetails->user_address_id)->first();
             $data = [
                 'shop_address' => Shops::where('id',$orderDetails->shop_id)->first()->address,
@@ -396,6 +473,8 @@ class CartController extends Controller
                 'order_total' => $orderDetails->order_total,
                 'is_ongoing_order' => $orderDetails->is_ongoing_order,
                 'id' => $orderDetails->id,
+                'date_time' => Carbon::parse($orderDetails->created_at)->format('d/m/Y, g:i A'),
+                'order_items' => $items
             ];
             $order[] = $data;
         }
@@ -415,22 +494,34 @@ class CartController extends Controller
             ]);
         }
         $user_id = auth()->user()->id;
-        $orderDetails = Order::where('id',$request->order_id)->with(['order_item.product'])->first();
+        $orderDetails = Order::where('id',$request->order_id)->with(['order_item'])->first();
         
-        $order_item_name = [];
+        // $order_item_name = [];
+        // $items = [];
+        // $order_item_with_qty = [];
+        // $item_price = 0;
+        // if(isset($orderDetails->order_item)){
+        //     foreach($orderDetails->order_item as $item){
+        //         $order_item_name[] = $item->product->name;
+        //         $order_item_with_qty[] = $item->quantity.' '.$item->product->name;
+        //         $item_price += $item->item_price * $item->quantity;
+        //         $items[] = $item;
+        //     }
+        // }
+        // $order = [];
+        $user_address = UserAddress::where('id',$orderDetails->user_address_id)->first();
         $items = [];
-        $order_item_with_qty = [];
-        $item_price = 0;
         if(isset($orderDetails->order_item)){
             foreach($orderDetails->order_item as $item){
-                $order_item_name[] = $item->product->name;
-                $order_item_with_qty[] = $item->quantity.' '.$item->product->name;
-                $item_price += $item->item_price * $item->quantity;
+                if($item->grab_best_deal_id){
+                    $item['product'] = $item->grab_best_deal_id ?  GrabBestDeal::select('deal_name as name','description','thumbnail_img_url as image_url')->where('id',$item->grab_best_deal_id)->first() : [];
+                }else{
+                    $item['product'] = $item->product_id ? Products::select('name','description','image_url')->where('id',$item->product_id)->first() : [] ;
+                }
                 $items[] = $item;
             }
         }
-        $order = [];
-        $user_address = UserAddress::where('id',$orderDetails->user_address_id)->first();
+        $delivery_boy = DeliveryBoy::where('id',$orderDetails->delivery_boy_id)->first();
         $order = [
             'shop_address' => Shops::where('id',$orderDetails->shop_id)->first()->address,
             'user_address' => $user_address,
@@ -440,16 +531,16 @@ class CartController extends Controller
             'payment_transaction_id' => $orderDetails->payment_transaction_id,
             'order_type' => $orderDetails->order_type,
             'order_status' => $orderDetails->order_status,
-            'order_total' => $orderDetails->order_total,
             'is_ongoing_order' => $orderDetails->is_ongoing_order,
             'id' => $orderDetails->id,
             'order_item_count' => count($orderDetails->order_item),
-            'order_items' => implode(',',$order_item_name),
-            'order_items_with_qty' => implode(' + ',$order_item_with_qty),
-            'item_total' => $item_price,
-            'GST' => $item_price*18/100,
-            'discount_amount' => ($orderDetails->order_total - ($item_price+$item_price*18/100) > 0) ? ($orderDetails->order_total - ($item_price+$item_price*18/100) > 0) : 0,
+            'item_total' => $orderDetails->item_total,
+            'delivery_charges' => $orderDetails->delivery_charges,
+            'discount_amount' => $orderDetails->discount_amount,
+            'GST' => $orderDetails->gst_charges,
+            'order_total' => $orderDetails->order_total,
             'order_items' => $items,
+            'delivery_boy_phone' => $delivery_boy ? $delivery_boy->phone_no : null,
         ];
         return response()->json(['data' => $order, 'message' => 'Orders get Successfully.','status' => true]);
     }
@@ -459,6 +550,7 @@ class CartController extends Controller
         [
             'order_id'=>'required',
             'order_status'=>'required',
+            'delivery_boy_id'=>'required',
         ]);
         if ($validator->fails()) {
             return  response()->json([
@@ -472,7 +564,10 @@ class CartController extends Controller
             return response()->json(['data' => $orderDetails, 'message' => 'Order not found.','status' => false]);
         }
         $orderDetails->order_status = $request->order_status;
-        $orderDetails->is_ongoing_order = 0;
+        $orderDetails->delivery_boy_id = $request->delivery_boy_id;
+        if($request->order_status == "delivered"){
+            $orderDetails->is_ongoing_order = 0;
+        }
         $orderDetails->save();
         return response()->json(['data' => $orderDetails, 'message' => 'Order status update Successfully.','status' => true]);
     }
@@ -491,5 +586,8 @@ class CartController extends Controller
         }
         return implode('', $pieces);
     }
+
+    
+      
 }
 

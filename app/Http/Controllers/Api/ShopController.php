@@ -62,7 +62,7 @@ class ShopController extends Controller
                 * cos(radians(shops.longitude) - radians(" . $long . ")) 
                 + sin(radians(" .$lat. ")) 
                 * sin(radians(shops.latitude))) AS distance"))
-                ->having('distance', '<', 10)
+                ->having('distance', '<', 3)
                 ->orderBy('distance', 'asc')
                 ->get();
         }elseif($lat && $long && $request->search){
