@@ -63,15 +63,21 @@ class CartController extends Controller
                 ]);
             }else{
                 $user_id = auth()->user()->id;
-                $grab_deal = GrabBestDeal::where('id',$request->grab_deal_id)->first();
-                $totalCount = $grab_deal->price;
-                $cartItems = new CartItems();
-                $cartItems->user_id = $user_id;
-                $cartItems->shop_id = $request->shop_id;
-                $cartItems->quantity = $request->quantity;
-                $cartItems->item_price = $totalCount;
-                $cartItems->grab_best_deal_id = $request->grab_deal_id;
-                $cartItems->save();
+                $cartItems = CartItems::where('grab_best_deal_id',$request->grab_deal_id)->first();
+                if($cartItems){
+                    $cartItems->quantity = $cartItems->quantity + $request->quantity;
+                    $cartItems->save();
+                }else{
+                    $grab_deal = GrabBestDeal::where('id',$request->grab_deal_id)->first();
+                    $totalCount = $grab_deal->price;
+                    $cartItems = new CartItems();
+                    $cartItems->user_id = $user_id;
+                    $cartItems->shop_id = $request->shop_id;
+                    $cartItems->quantity = $request->quantity;
+                    $cartItems->item_price = $totalCount;
+                    $cartItems->grab_best_deal_id = $request->grab_deal_id;
+                    $cartItems->save();
+                }
             }
             return response()->json(['data' => $cartItems,'message' => 'Product Added into Cart Successfully.','status' => true]);
         }else{
@@ -524,7 +530,7 @@ class CartController extends Controller
         $delivery_boy = DeliveryBoy::where('id',$orderDetails->delivery_boy_id)->first();
         $order = [
             'shop_address' => Shops::where('id',$orderDetails->shop_id)->first()->address,
-            'user_address' => $user_address,
+            'delivery_address' => $user_address,
             'order_number' => $orderDetails->order_number,
             'payment_method' => $orderDetails->payment_method,
             'payment_gateway' => $orderDetails->payment_gateway,
@@ -541,6 +547,7 @@ class CartController extends Controller
             'order_total' => $orderDetails->order_total,
             'order_items' => $items,
             'delivery_boy_phone' => $delivery_boy ? $delivery_boy->phone_no : null,
+            'order_date' => Carbon::parse($orderDetails->created_at)->format('d/m/Y, g:i A'),
         ];
         return response()->json(['data' => $order, 'message' => 'Orders get Successfully.','status' => true]);
     }
