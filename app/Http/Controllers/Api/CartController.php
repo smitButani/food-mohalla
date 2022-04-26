@@ -501,20 +501,6 @@ class CartController extends Controller
         }
         $user_id = auth()->user()->id;
         $orderDetails = Order::where('id',$request->order_id)->with(['order_item'])->first();
-        
-        // $order_item_name = [];
-        // $items = [];
-        // $order_item_with_qty = [];
-        // $item_price = 0;
-        // if(isset($orderDetails->order_item)){
-        //     foreach($orderDetails->order_item as $item){
-        //         $order_item_name[] = $item->product->name;
-        //         $order_item_with_qty[] = $item->quantity.' '.$item->product->name;
-        //         $item_price += $item->item_price * $item->quantity;
-        //         $items[] = $item;
-        //     }
-        // }
-        // $order = [];
         $user_address = UserAddress::where('id',$orderDetails->user_address_id)->first();
         $items = [];
         if(isset($orderDetails->order_item)){
@@ -594,7 +580,53 @@ class CartController extends Controller
         return implode('', $pieces);
     }
 
-    
-      
+    public function cartReset(Request $request){
+        $user_id = auth()->user()->id;
+        $data = CartItems::where('user_id',$user_id)->delete();
+        return response()->json(['data' => $data, 'message' => 'Cart Reset Successfully.','status' => true]);
+    }
+
+    public function repeatOrder(Request $request) {
+        $validator = Validator::make($request->all(), 
+        [
+            'order_id'=>'required',
+        ]);
+        if ($validator->fails()) {
+            return  response()->json([
+                'data' => $validator->messages(), 
+                'message' => 'please add valid data.', 
+                'status' => false
+            ]);
+        }
+        $orderItems = OrderItem::where('order_id',$request->order_id)->get();
+        if($orderItems){
+            foreach($orderItems as $item){
+                // create cart items
+                $cartItems = new CartItems();
+                $cartItems->user_id = auth()->user()->id;
+                $cartItems->shop_id = $item->shop_id;
+                $cartItems->product_id = $item->product_id;
+                $cartItems->grab_best_deal_id = $item->grab_best_deal_id;
+                $cartItems->item_price = $item->item_price;
+                $cartItems->quantity = $item->quantity;
+                $cartItems->save();
+                
+                //order customize check
+                $orderItemsCustomize = OrderItemsCustomize::where('order_item_id',$item->id)->get();
+                foreach($orderItemsCustomize as $customize){
+                    if(!empty($customize) && isset($customize->product_customize_id)){
+                        $CartItemsCustomize = new CartItemsCustomize();
+                        $CartItemsCustomize->cart_item_id = $cartItems->id;
+                        $CartItemsCustomize->user_id = auth()->user()->id;
+                        $CartItemsCustomize->product_customize_id = $customize->product_customize_id;
+                        $CartItemsCustomize->save();
+                    }
+                }
+               
+            }
+        }
+        $cartItemData = CartItems::where('user_id',auth()->user()->id)->get();
+        return response()->json(['data' => $cartItemData, 'message' => 'Order Repeat on Cart Successfully.','status' => true]);
+    }
 }
 

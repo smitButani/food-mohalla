@@ -25,6 +25,7 @@ Route::group(['prefix' => 'user', 'middleware' => 'auth:api'], function(){
     Route::get('/view-profile','Api\UserController@userDetails');
     Route::post('/update','Api\UserController@update');
     Route::post('/store-list-by-location', 'Api\ShopController@list');
+    Route::post('/udpate-device-token', 'Api\UserController@updateDeviceToken');
 });
 
 //dashboard Api List
@@ -48,12 +49,16 @@ Route::post('/add-to-cart', 'Api\CartController@addToCart')->middleware('auth:ap
 Route::get('/get-cart-item', 'Api\CartController@getCart')->middleware('auth:api');
 Route::post('/update-cart-item', 'Api\CartController@updateCart')->middleware('auth:api');
 Route::post('/delete-cart-item', 'Api\CartController@deleteCartItem')->middleware('auth:api');
+Route::get('/cart-reset', 'Api\CartController@cartReset')->middleware('auth:api');
+
+// Order Api list
 Route::post('/payment-page', 'Api\CartController@paymentPage')->middleware('auth:api');
 Route::post('/check-promo', 'Api\CartController@checkPromocode')->middleware('auth:api');
 Route::post('/create-order', 'Api\CartController@createOrder')->middleware('auth:api');
 Route::post('/order-list', 'Api\CartController@orderList')->middleware('auth:api');
 Route::post('/order-details', 'Api\CartController@orderDetails')->middleware('auth:api');
 Route::post('/order-status-change', 'Api\CartController@orderStatusChange')->middleware('auth:api');
+Route::post('/order-repeat', 'Api\CartController@repeatOrder')->middleware('auth:api');
 // Route::post('/order-lists', 'Api\CartController@orderLists')->middleware('auth:api');
 
 //Address Api List

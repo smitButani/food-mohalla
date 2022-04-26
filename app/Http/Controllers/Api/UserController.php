@@ -89,13 +89,24 @@ class UserController extends Controller
     }
 
     public function update(Request $request){
-        $validator = Validator::make($request->all(), 
-        [
-            'phone_number'=>'required',
-            'first_name'=>'required',
-            'last_name' => 'required',
-            'profile_img' => 'mimes:jpeg,jpg,bmp,png,gif,svg,pdf'
-        ]);
+        $user = auth()->user();
+        if($user->phone_number == $request->phone_number){
+            $validator = Validator::make($request->all(), 
+            [
+                'phone_number'=>'required',
+                'first_name'=>'required',
+                'last_name' => 'required',
+                'profile_img' => 'mimes:jpeg,jpg,bmp,png,gif,svg,pdf'
+            ]);
+        }else{
+            $validator = Validator::make($request->all(), 
+            [
+                'phone_number'=>'required|unique:users',
+                'first_name'=>'required',
+                'last_name' => 'required',
+                'profile_img' => 'mimes:jpeg,jpg,bmp,png,gif,svg,pdf'
+            ]);
+        }
         if ($validator->fails()) {
             return  response()->json([
                 'data' => $validator->messages(), 
@@ -136,5 +147,26 @@ class UserController extends Controller
             return response()->json(['data' => NUll,'message' => 'User not found.','status' => false]);
         }
         return response()->json(['data' => $user,'message' => 'User get successfully.','status' => true]);
+    }
+
+    public function updateDeviceToken(Request $request){
+        $validator = Validator::make($request->all(), 
+        [
+            'device_type'=>'required',
+            'device_token'=>'required',
+        ]);
+        if ($validator->fails()) {
+            return  response()->json([
+                'data' => $validator->messages(), 
+                'message' => 'please add valid data.', 
+                'status' => false
+            ]);
+        } else {
+            $user = User::where('id',auth()->user()->id)->first();
+            $user->device_type = $request->device_type;
+            $user->device_token = $request->device_token;
+            $user->save();
+        }
+        return response()->json(['data' => $user,'message' => 'User device token set successfully.','status' => true]);
     }
 }
