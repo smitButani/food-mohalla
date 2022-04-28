@@ -137,7 +137,7 @@ class CartController extends Controller
         $cartData = [];
         $total_price = 0;
         foreach($getCartItems as $item){
-            if(!empty($item->grab_best_deal_id)){
+            if($item->grab_best_deal_id){
                 $data['cart_item_id'] = $item->id;
                 $data['image_url'] = GrabBestDeal::where('id',$item->grab_best_deal_id)->first()->thumbnail_img_url;
                 $data['product_name'] = GrabBestDeal::where('id',$item->grab_best_deal_id)->first()->deal_name;
