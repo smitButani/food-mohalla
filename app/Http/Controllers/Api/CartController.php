@@ -63,7 +63,7 @@ class CartController extends Controller
                 ]);
             }else{
                 $user_id = auth()->user()->id;
-                $cartItems = CartItems::where('grab_best_deal_id',$request->grab_deal_id)->first();
+                $cartItems = CartItems::where('user_id',$user_id)->where('grab_best_deal_id',$request->grab_deal_id)->first();
                 if($cartItems){
                     $cartItems->quantity = $cartItems->quantity + $request->quantity;
                     $cartItems->save();
@@ -137,8 +137,9 @@ class CartController extends Controller
         $cartData = [];
         $total_price = 0;
         foreach($getCartItems as $item){
-            if($item->grab_best_deal_id){
+            if(isset($item->grab_best_deal_id) && !empty($item->grab_best_deal_id) && $item->grab_best_deal_id > 0){
                 $data['cart_item_id'] = $item->id;
+                $data['user_id'] = $user_id;
                 $data['image_url'] = GrabBestDeal::where('id',$item->grab_best_deal_id)->first()->thumbnail_img_url;
                 $data['product_name'] = GrabBestDeal::where('id',$item->grab_best_deal_id)->first()->deal_name;
                 $data['quntity'] = $item->quantity;
@@ -146,6 +147,7 @@ class CartController extends Controller
                 $total_price += $item->item_price * $item->quantity;
             }else{
                 $data['cart_item_id'] = $item->id;
+                $data['user_id'] = $user_id;
                 $data['image_url'] = Products::where('id',$item->product_id)->first()->image_url;
                 $data['product_name'] = Products::where('id',$item->product_id)->first()->name;
                 $data['quntity'] = $item->quantity;
