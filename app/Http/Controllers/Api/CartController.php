@@ -471,6 +471,7 @@ class CartController extends Controller
             $user_address = UserAddress::where('id',$orderDetails->user_address_id)->first();
             $data = [
                 'shop_address' => Shops::where('id',$orderDetails->shop_id)->first()->address,
+                'shop_details' => Shops::where('id',$orderDetails->shop_id)->first(),
                 'user_address' => $user_address,
                 'order_number' => $orderDetails->order_number,
                 'payment_method' => $orderDetails->payment_method,
