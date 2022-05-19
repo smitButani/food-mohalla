@@ -287,9 +287,7 @@ class CartController extends Controller
             ]);
         } else {
             $user_id = auth()->user()->id;
-
             $allCartItems = CartItems::where('user_id',$user_id)->get();
-
             $total_price = 0;
             foreach($allCartItems as $item){
                 $total_price += $item->item_price * $item->quantity;
@@ -303,7 +301,7 @@ class CartController extends Controller
                             // check cart total
                             if($offer->discount_type == 'p'){
                                 $discount_amount = $total_price * $offer->discount_amount / 100;
-                                $discount_amount = ($discount_amount > $offer->max_discount_amount) ? $offer->max_discount_amount : $dicount_amount;
+                                $discount_amount = ($discount_amount > $offer->max_discount_amount) ? $offer->max_discount_amount : $discount_amount;
                             }
                             if($offer->discount_type == 'f'){
                                 $discount_amount = $offer->discount_amount;
