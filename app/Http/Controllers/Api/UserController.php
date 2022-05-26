@@ -10,6 +10,7 @@ use DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Storage;
+use App\Models\UserSetting;
 
 class UserController extends Controller
 {
@@ -84,6 +85,13 @@ class UserController extends Controller
             $accessToken = $user->createToken('authToken')->accessToken;
             $user->token = $accessToken;
             $user->save();
+            
+            $is_exist_setting = UserSetting::where('user_id',$user->id)->first();
+            if(!$is_exist_setting){
+                $user_setting = UserSetting::firstOrNew(array('user_id' => $user->id));
+                $user_setting->notification_active = 1;
+                $user_setting->save();
+            }
         }
         return response()->json(['data' => ['user' => $user, 'access_token' => $accessToken ],'message' => 'User created successfully.','status' => true]);
     }
@@ -168,5 +176,38 @@ class UserController extends Controller
             $user->save();
         }
         return response()->json(['data' => $user,'message' => 'User device token set successfully.','status' => true]);
+    }
+
+    public function logout(Request $request){
+        $user = Auth::user()->token();
+        $user->revoke();
+        return response()->json(['data' => 'Logout','message' => 'User logout successfully.','status' => true]);
+    }
+
+    public function updateSetting(Request $request){
+        $userId = Auth::user()->id;
+        $validator = Validator::make($request->all(), 
+        [
+            'notification_active'=>'required',
+        ]);
+        if ($validator->fails()) {
+            return  response()->json([
+                'data' => $validator->messages(), 
+                'message' => 'please add valid data.', 
+                'status' => false
+            ]);
+        } else {
+            $user_setting = UserSetting::firstOrNew(array('user_id' => $userId));
+            $user_setting->user_id = $userId;
+            $user_setting->notification_active = $request['notification_active'];
+            $user_setting->save();
+            return response()->json(['data' => $user_setting,'message' => 'User Setting update successfully.','status' => true]);
+        }
+    }
+
+    public function getUserSetting(Request $request){
+        $userId = Auth::user()->id;
+        $user_setting = UserSetting::where('user_id', $userId)->first();
+        return response()->json(['data' => $user_setting,'message' => 'User Setting get successfully.','status' => true]);
     }
 }

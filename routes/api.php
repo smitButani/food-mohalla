@@ -39,6 +39,9 @@ Route::post('categories-wise-products/', 'Api\CategoryController@categoryWishPro
 Route::get('product-customize-details/{productId}', 'Api\ProductController@productCustomizeDetails');
 Route::post('product-search/', 'Api\ProductController@productSearch');
 Route::get('products-details/{productId}', 'Api\ProductController@productDetails');
+Route::get('logout', 'Api\UserController@logout')->middleware('auth:api');
+Route::post('update-setting', 'Api\UserController@updateSetting')->middleware('auth:api');
+Route::get('get-setting', 'Api\UserController@getUserSetting')->middleware('auth:api');
 
 // Offer Api List
 Route::get('offers/', 'Api\OfferController@list');
