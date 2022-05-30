@@ -43,6 +43,8 @@ class OfferController extends Controller
             $offers->discount_type = $request->discount_type;
             $offers->min_cart_price = $request->min_cart_price;
             $offers->max_discount_amount = $request->max_discount_amount;
+            $offers->apply_on_product = $request->apply_on_product ?? 0;
+            $offers->apply_on_category = $request->apply_on_category ?? 0;
             $offers->save();
         }
         return response()->json(['data' => $offers,'message' => 'Offer Created Successfully.','status' => true]);

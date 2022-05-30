@@ -300,21 +300,83 @@ class CartController extends Controller
                         if($offer->min_cart_price < $total_price){
                             // check cart total
                             if($offer->discount_type == 'p'){
-                                $discount_amount = $total_price * $offer->discount_amount / 100;
-                                $discount_amount = ($discount_amount > $offer->max_discount_amount) ? $offer->max_discount_amount : $discount_amount;
+                                $products = Products::where('category_id',$offer->apply_on_category)->where('id',$offer->apply_on_product)->first();
+                                if($offer->apply_on_category > 0 && $offer->apply_on_product > 0){
+                                    $products = Products::where('category_id',$offer->apply_on_category)->first();
+                                    if(!empty($products)){
+                                        $productExistOrNot = CartItems::where('user_id',$user_id)->where('product_id',$offer->apply_on_product)->get();
+                                        echo "<pre>";
+                                        print_r('hello fix discount with test');
+                                        print_r($productExistOrNot);
+                                        die;
+                                    }
+                                    echo 'check this category with discount product ?';
+                                } else if($offer->apply_on_product > 0) {
+                                    echo 'check this category product ?';
+                                } else if($offer->apply_on_category > 0){
+                                    echo 'check this category ?';
+                                } else {
+                                    $discount_amount = $total_price * $offer->discount_amount / 100;
+                                    $discount_amount = ($discount_amount > $offer->max_discount_amount) ? $offer->max_discount_amount : $discount_amount;
+                                }
                             }
                             if($offer->discount_type == 'f'){
-                                $discount_amount = $offer->discount_amount;
+                                $products = Products::where('category_id',$offer->apply_on_category)->where('id',$offer->apply_on_product)->first();
+                                if($offer->apply_on_category > 0 && $offer->apply_on_product > 0){
+                                    if(!empty($products)){
+                                        $productExistOrNot = CartItems::where('user_id',$user_id)->where('product_id',$offer->apply_on_product)->get();
+                                        echo "<pre>";
+                                        print_r('hello fix discount with test');
+                                        print_r($productExistOrNot);
+                                        die;
+                                    }
+                                } else if($offer->apply_on_product > 0) {
+                                        echo 'check this category product ?';
+                                } else if($offer->apply_on_category > 0){
+                                    echo 'check this category ?';
+                                } else {
+                                    $discount_amount = $offer->discount_amount;
+                                }
                             }
                         }else{
                             $data['promo_code_error_message'] = 'Your cart Items price Less then offer amount.';
                         }
                     }else{
                         if($offer->discount_type == 'p'){
-                            $discount_amount = $total_price * $offer->discount_amount /100 ;
+                            if($offer->apply_on_category > 0 && $offer->apply_on_product > 0){
+                                $products = Products::where('category_id',$offer->apply_on_category)->where('id',$offer->apply_on_product)->first();
+                                if(!empty($products)){
+                                    $productExistOrNot = CartItems::where('user_id',$user_id)->where('product_id',$offer->apply_on_product)->get();
+                                    echo "<pre>";
+                                    print_r('hello fix discount with test');
+                                    print_r($productExistOrNot);
+                                    die;
+                                }
+                            } else if($offer->apply_on_product > 0) {
+                                echo 'check this category product ?';
+                            } else if($offer->apply_on_category > 0){
+                                echo 'check this category ?';
+                            } else {
+                                $discount_amount = $total_price * $offer->discount_amount /100 ;
+                            }
                         }
                         if($offer->discount_type == 'f'){
-                            $discount_amount = $offer->discount_amount;
+                            if($offer->apply_on_category > 0 && $offer->apply_on_product > 0){
+                                $products = Products::where('category_id',$offer->apply_on_category)->where('id',$offer->apply_on_product)->first();
+                                if(!empty($products)){
+                                    $productExistOrNot = CartItems::where('user_id',$user_id)->where('product_id',$offer->apply_on_product)->get();
+                                    echo "<pre>";
+                                    print_r('hello fix discount with test');
+                                    print_r($productExistOrNot);
+                                    die;
+                                }
+                            } else if($offer->apply_on_product > 0) {
+                                echo 'check this category product ?';
+                            } else if($offer->apply_on_category > 0){
+                                echo 'check this category ?';
+                            } else {
+                                $discount_amount = $offer->discount_amount;
+                            }
                         }
                     }
             }else{
@@ -384,6 +446,7 @@ class CartController extends Controller
         $order->order_type = $request->order_type;
         $order->discount_amount = $request->discount_amount;
         $order->promo_code = $request->promo_code;
+        $order->cooking_instruction = $request->cooking_instruction ?? '';
         if($order->payment_method == 'UPI'){
             $order->payment_gateway = $request->payment_gateway;
             $order->payment_transaction_id = $request->payment_transaction_id;
