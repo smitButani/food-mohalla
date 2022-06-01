@@ -98,54 +98,26 @@ class UserController extends Controller
 
     public function update(Request $request){
         $user = auth()->user();
-        if($user->phone_number == $request->phone_number){
-            $validator = Validator::make($request->all(), 
-            [
-                'phone_number'=>'required',
-                'first_name'=>'required',
-                'last_name' => 'required',
-                'profile_img' => 'mimes:jpeg,jpg,bmp,png,gif,svg,pdf'
-            ]);
-        }else{
-            $validator = Validator::make($request->all(), 
-            [
-                'phone_number'=>'required|unique:users',
-                'first_name'=>'required',
-                'last_name' => 'required',
-                'profile_img' => 'mimes:jpeg,jpg,bmp,png,gif,svg,pdf'
-            ]);
+        if(!$user){
+            return response()->json(['data' => NUll,'message' => 'User not found.','status' => false]);
         }
-        if ($validator->fails()) {
-            return  response()->json([
-                'data' => $validator->messages(), 
-                'message' => 'please add valid data.', 
-                'status' => false
-            ]);
-        } else {
-            // $user = User::where('phone_number', $request->phone_number)->where('otp_token', $request->otp_token)->first();
-            $user = auth()->user();
-            if(!$user){
-                return response()->json(['data' => NUll,'message' => 'User not found.','status' => false]);
-            }
 
-            if ($request->hasFile('profile_img')) {
-                $user_image = $request->file('profile_img');
-                $file_extension = $user_image->getClientOriginalExtension();
-                $filename = time() . '.' . $file_extension;
+        if ($request->hasFile('profile_img')) {
+            $user_image = $request->file('profile_img');
+            $file_extension = $user_image->getClientOriginalExtension();
+            $filename = time() . '.' . $file_extension;
 
-                Storage::put('public/user/profile/user-' . $filename, (string) file_get_contents($user_image), 'public');
-                $profileUrl =  Storage::url('public/user/profile/user-' . $filename);
+            Storage::put('public/user/profile/user-' . $filename, (string) file_get_contents($user_image), 'public');
+            $profileUrl =  Storage::url('public/user/profile/user-' . $filename);
 
-                $user->image_url = $profileUrl ?? '';
-            }
-            
-            $user->first_name = $request->first_name ?? '';
-            $user->last_name = $request->last_name ?? '';
-            $user->username = $request->username ?? '';
-            $user->phone_number = $request->phone_number ?? '';
-            $user->email = $request->email ?? '';
-            $user->save();
+            $user->image_url = $profileUrl ?? '';
         }
+        
+        $user->first_name = $request->first_name ?? '';
+        $user->last_name = $request->last_name ?? '';
+        $user->username = $request->username ?? '';
+        $user->email = $request->email ?? '';
+        $user->save();
         return response()->json(['data' => ['user' => $user ],'message' => 'User updated successfully.','status' => true]);
     }
 

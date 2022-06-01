@@ -69,8 +69,8 @@ Route::group(['prefix' => 'user-address', 'middleware' => 'auth:api'], function(
     Route::get('/', 'Api\UserAddressController@list');
     Route::get('/{id}', 'Api\UserAddressController@get_one');
     Route::post('/create', 'Api\UserAddressController@create');
-    Route::post('/update/{id}', 'Api\UserAddressController@update');
-    Route::delete('/delete/{id}', 'Api\UserAddressController@delete');
+    Route::post('/update', 'Api\UserAddressController@update');
+    Route::post('/delete', 'Api\UserAddressController@delete');
 });
 
 //shop

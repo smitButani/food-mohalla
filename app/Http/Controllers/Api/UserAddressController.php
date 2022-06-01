@@ -58,12 +58,9 @@ class UserAddressController extends Controller
     }
 
     public function update(Request $request){
-        $userAddress = UserAddress::where('id',$request->id)->first();
-        if(!$userAddress){
-            return response()->json(['data' => NUll,'message' => 'User Address not found.','status' => false]);
-        }
         $validator = Validator::make($request->all(), 
         [
+            'address_id' => 'required',
             'user_id'=>'required',
             'address'=>'required',
             'zipcode'=>'required',
@@ -80,6 +77,10 @@ class UserAddressController extends Controller
                 'status' => false
             ]);
         } else {
+            $userAddress = UserAddress::where('id',$request->address_id)->first();
+            if(!$userAddress){
+                return response()->json(['data' => NUll,'message' => 'User Address not found.','status' => false]);
+            }
             $userAddress->user_id = $request->user_id;
             $userAddress->address = $request->address;
             $userAddress->zipcode = $request->zipcode;
@@ -94,10 +95,21 @@ class UserAddressController extends Controller
     }
 
     public function delete(Request $request){
-        $userAddress = UserAddress::where('id',$request->id)->delete();
-        if(!$userAddress){
-            return response()->json(['data' => NUll,'message' => 'User Address Not found.','status' => false]);
+        $validator = Validator::make($request->all(),[
+            'address_id' => 'required',
+        ]);
+        if ($validator->fails()) {
+            return  response()->json([
+                'data' => $validator->messages(), 
+                'message' => 'please add valid data.', 
+                'status' => false
+            ]);
+        } else {
+            $userAddress = UserAddress::where('id',$request->address_id)->delete();
+            if(!$userAddress){
+                return response()->json(['data' => NUll,'message' => 'User Address Not found.','status' => false]);
+            }
+            return response()->json(['data' => $userAddress,'message' => 'User Address deleted Successfully.','status' => true]);
         }
-        return response()->json(['data' => $userAddress,'message' => 'User Address deleted Successfully.','status' => true]);
     }
 }

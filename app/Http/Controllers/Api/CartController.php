@@ -105,6 +105,14 @@ class CartController extends Controller
                         'status' => false
                     ]);
                 }
+                if($product_data->is_recommended){
+                    $cartItems = CartItems::where('user_id',$user_id)->where('product_id',$request->product_id)->first();
+                    if($cartItems){
+                        $cartItems->quantity = $cartItems->quantity + $request->quantity;
+                        $cartItems->save();
+                        return response()->json(['data' => $cartItems,'message' => 'Product Added into Cart Successfully.','status' => true]);
+                    }
+                }
                 if(!empty($request->customize_ids)){
                     $customize_details_data = ProductCustomizeOption::select(DB::raw("SUM(customize_charges) as count"))->whereIn('id',$customize_ids)->first();
                     $customize_price = $customize_details_data->count; 
@@ -142,6 +150,7 @@ class CartController extends Controller
                 $data['user_id'] = $user_id;
                 $data['image_url'] = GrabBestDeal::where('id',$item->grab_best_deal_id)->first()->thumbnail_img_url;
                 $data['product_name'] = GrabBestDeal::where('id',$item->grab_best_deal_id)->first()->deal_name;
+                $data['product_description'] = GrabBestDeal::where('id',$item->grab_best_deal_id)->first()->description;
                 $data['quntity'] = $item->quantity;
                 $data['price'] = $item->item_price;
                 $total_price += $item->item_price * $item->quantity;
@@ -150,6 +159,7 @@ class CartController extends Controller
                 $data['user_id'] = $user_id;
                 $data['image_url'] = Products::where('id',$item->product_id)->first()->image_url;
                 $data['product_name'] = Products::where('id',$item->product_id)->first()->name;
+                $data['product_description'] = Products::where('id',$item->product_id)->first()->description;
                 $data['quntity'] = $item->quantity;
                 $data['price'] = $item->item_price;
                 $total_price += $item->item_price * $item->quantity;
@@ -305,14 +315,17 @@ class CartController extends Controller
                                     $products = Products::where('category_id',$offer->apply_on_category)->first();
                                     if(!empty($products)){
                                         $productExistOrNot = CartItems::where('user_id',$user_id)->where('product_id',$offer->apply_on_product)->get();
-                                        echo "<pre>";
-                                        print_r('hello fix discount with test');
-                                        print_r($productExistOrNot);
-                                        die;
+                                        if($productExistOrNot){
+                                            $discount_amount = $products->price * $offer->discount_amount / 100;
+                                            $discount_amount = ($discount_amount > $offer->max_discount_amount) ? $offer->max_discount_amount : $discount_amount;
+                                        }
                                     }
-                                    echo 'check this category with discount product ?';
                                 } else if($offer->apply_on_product > 0) {
-                                    echo 'check this category product ?';
+                                    $productExistOrNot = CartItems::where('user_id',$user_id)->where('product_id',$offer->apply_on_product)->get();
+                                    if($productExistOrNot){
+                                        $discount_amount = $products->price * $offer->discount_amount / 100;
+                                        $discount_amount = ($discount_amount > $offer->max_discount_amount) ? $offer->max_discount_amount : $discount_amount;
+                                    }
                                 } else if($offer->apply_on_category > 0){
                                     echo 'check this category ?';
                                 } else {
@@ -325,13 +338,15 @@ class CartController extends Controller
                                 if($offer->apply_on_category > 0 && $offer->apply_on_product > 0){
                                     if(!empty($products)){
                                         $productExistOrNot = CartItems::where('user_id',$user_id)->where('product_id',$offer->apply_on_product)->get();
-                                        echo "<pre>";
-                                        print_r('hello fix discount with test');
-                                        print_r($productExistOrNot);
-                                        die;
+                                        if($productExistOrNot){
+                                            $discount_amount = $offer->discount_amount;
+                                        }
                                     }
                                 } else if($offer->apply_on_product > 0) {
-                                        echo 'check this category product ?';
+                                    $productExistOrNot = CartItems::where('user_id',$user_id)->where('product_id',$offer->apply_on_product)->get();
+                                    if($productExistOrNot){
+                                        $discount_amount = $offer->discount_amount;
+                                    }
                                 } else if($offer->apply_on_category > 0){
                                     echo 'check this category ?';
                                 } else {
@@ -347,15 +362,19 @@ class CartController extends Controller
                                 $products = Products::where('category_id',$offer->apply_on_category)->where('id',$offer->apply_on_product)->first();
                                 if(!empty($products)){
                                     $productExistOrNot = CartItems::where('user_id',$user_id)->where('product_id',$offer->apply_on_product)->get();
-                                    echo "<pre>";
-                                    print_r('hello fix discount with test');
-                                    print_r($productExistOrNot);
-                                    die;
+                                    if($productExistOrNot){
+                                        $discount_amount = $products->price * $offer->discount_amount / 100;
+                                        $discount_amount = ($discount_amount > $offer->max_discount_amount) ? $offer->max_discount_amount : $discount_amount;
+                                    }
                                 }
                             } else if($offer->apply_on_product > 0) {
-                                echo 'check this category product ?';
+                                $productExistOrNot = CartItems::where('user_id',$user_id)->where('product_id',$offer->apply_on_product)->get();
+                                if($productExistOrNot){
+                                    $discount_amount = $products->price * $offer->discount_amount / 100;
+                                    $discount_amount = ($discount_amount > $offer->max_discount_amount) ? $offer->max_discount_amount : $discount_amount;
+                                }
                             } else if($offer->apply_on_category > 0){
-                                echo 'check this category ?';
+                                // echo 'check this category ?';
                             } else {
                                 $discount_amount = $total_price * $offer->discount_amount /100 ;
                             }
@@ -365,13 +384,15 @@ class CartController extends Controller
                                 $products = Products::where('category_id',$offer->apply_on_category)->where('id',$offer->apply_on_product)->first();
                                 if(!empty($products)){
                                     $productExistOrNot = CartItems::where('user_id',$user_id)->where('product_id',$offer->apply_on_product)->get();
-                                    echo "<pre>";
-                                    print_r('hello fix discount with test');
-                                    print_r($productExistOrNot);
-                                    die;
+                                    if($productExistOrNot){
+                                        $discount_amount = $offer->discount_amount;
+                                    }
                                 }
                             } else if($offer->apply_on_product > 0) {
-                                echo 'check this category product ?';
+                                $productExistOrNot = CartItems::where('user_id',$user_id)->where('product_id',$offer->apply_on_product)->get();
+                                if($productExistOrNot){
+                                    $discount_amount = $offer->discount_amount;
+                                }
                             } else if($offer->apply_on_category > 0){
                                 echo 'check this category ?';
                             } else {
@@ -514,7 +535,7 @@ class CartController extends Controller
 
     public function orderList(Request $request){
         $user_id = auth()->user()->id;
-        $orderDetails = Order::where('user_id',$user_id)->with(['order_item'])->get();
+        $orderDetails = Order::where('user_id',$user_id)->with(['order_item'])->orderBy('id', 'DESC')->get();
         $order = [];
         foreach($orderDetails as $orderDetails){
             $items = [];
@@ -596,7 +617,8 @@ class CartController extends Controller
             'GST' => $orderDetails->gst_charges,
             'order_total' => $orderDetails->order_total,
             'order_items' => $items,
-            'delivery_boy_phone' => $delivery_boy ? $delivery_boy->phone_no : null,
+            'delivery_boy_phone' => $delivery_boy ? $delivery_boy->phone_no : '',
+            'cooking_instruction' => $orderDetails->cooking_instruction ? $orderDetails->cooking_instruction : '',
             'order_date' => Carbon::parse($orderDetails->created_at)->format('d/m/Y, g:i A'),
         ];
         return response()->json(['data' => $order, 'message' => 'Orders get Successfully.','status' => true]);
