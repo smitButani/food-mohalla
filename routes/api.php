@@ -36,7 +36,7 @@ Route::post('category/', 'Api\CategoryController@list');
 Route::post('product/', 'Api\ProductController@list');
 Route::post('categories-wise-products/', 'Api\CategoryController@categoryWishProducts');
 // Route::get('product-wise-variants/{productId}', 'Api\ProductController@productWiseVariants');
-Route::post('product-customize-details', 'Api\ProductController@productCustomizeDetails');
+Route::get('product-customize-details/{productId}', 'Api\ProductController@productCustomizeDetails');
 Route::post('product-search/', 'Api\ProductController@productSearch');
 Route::get('products-details/{productId}', 'Api\ProductController@productDetails');
 Route::get('logout', 'Api\UserController@logout')->middleware('auth:api');
