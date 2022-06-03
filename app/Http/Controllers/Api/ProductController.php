@@ -139,8 +139,21 @@ class ProductController extends Controller
     }
 
     public function productCustomizeDetails(Request $request){
-        $product_customize_details = Products::where('id',$request->productId)->with(['productCustomizeType.productCustomizeOption'])->first();
-        return response()->json(['data' => $product_customize_details,'message' => 'Products variants get Successfully.','status' => true]);
+        $validator = Validator::make($request->all(), 
+        [
+            'product_id'=>'required',
+        ]);
+        if ($validator->fails()) {
+            return  response()->json([
+                'data' => $validator->messages(), 
+                'message' => 'please add valid data.', 
+                'status' => false
+            ]);
+        } else {
+            $product_customize_details = Products::where('id',$request->product_id)->with(['productCustomizeType.productCustomizeOption'])->first();
+            return response()->json(['data' => $product_customize_details,'message' => 'Products variants get Successfully.','status' => true]);
+        }
+             
     }
 
     public function productDetails(Request $request){
