@@ -266,7 +266,7 @@ class CartController extends Controller
             $data['per_km_charges'] = $charges;
             $data['delivery_charges'] = round($this->checkDisctranceCharges($latitudeFrom, $longitudeFrom, $latitudeTo, $longitudeTo)*$charges);
             $total_payable_amount = round($GST + $data['delivery_charges'] +($total_price - ($discount_amount ?? 0)));
-            $data['total_payable_amount'] = $total_payable_amount;
+            $data['total_payable_amount'] = round($total_payable_amount,2);
         }
         return response()->json(['data' => $data,'message' => 'Payment Page Details Successfully.','status' => true]);
     }
@@ -492,7 +492,7 @@ class CartController extends Controller
         $order->gst_charges = $GST;
 
         $order->item_total = $total_price;
-        $order->order_total = ($total_price + $GST + $order->delivery_charges - $dicount_amount);
+        $order->order_total = round(($total_price + $GST + $order->delivery_charges - $dicount_amount),2);
         $order->save();
 
         if($order){
