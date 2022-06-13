@@ -64,7 +64,7 @@ class UserController extends Controller
                     } 
                     return response()->json(['data' => ['otp_token' => $randomNumber ],'message' => 'Otp Generated Successfully.','status' => true]);
                 }catch(\Exception $e){
-                    return response()->json(['data' => 'invalid','message' => 'invalid data','status' => true]);
+                    return response()->json(['data' => false,'message' => 'Please enter Valid Phone Number','status' => false]);
                 }
             }
             
