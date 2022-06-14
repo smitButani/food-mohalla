@@ -119,10 +119,10 @@ class UserController extends Controller
             $accessToken = $user->createToken('authToken')->accessToken;
             $user->token = $accessToken;
             $user->save();
-            
             $is_exist_setting = UserSetting::where('user_id',$user->id)->first();
             if(!$is_exist_setting){
-                $user_setting = UserSetting::firstOrNew(array('user_id' => $user->id));
+                $user_setting = new UserSetting();
+                $user_setting->user_id = $user->id;
                 $user_setting->notification_active = 1;
                 $user_setting->save();
             }
