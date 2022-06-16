@@ -146,27 +146,37 @@ class CartController extends Controller
         $total_price = 0;
         foreach($getCartItems as $item){
             if(isset($item->grab_best_deal_id) && !empty($item->grab_best_deal_id) && $item->grab_best_deal_id > 0){
-                $data['cart_item_id'] = $item->id;
-                $data['user_id'] = $user_id;
-                $data['image_url'] = GrabBestDeal::where('id',$item->grab_best_deal_id)->first()->thumbnail_img_url;
-                $data['product_name'] = GrabBestDeal::where('id',$item->grab_best_deal_id)->first()->deal_name;
-                $data['product_description'] = GrabBestDeal::where('id',$item->grab_best_deal_id)->first()->description;
-                $data['quntity'] = $item->quantity;
-                $data['price'] = $item->item_price;
-                $total_price += $item->item_price * $item->quantity;
+                $grab_deal = GrabBestDeal::where('id',$item->grab_best_deal_id)->first();
+                if($grab_deal){
+                    $data['cart_item_id'] = $item->id;
+                    $data['user_id'] = $user_id;
+                    $data['image_url'] = $grab_deal->thumbnail_img_url;
+                    $data['product_name'] = $grab_deal->deal_name;
+                    $data['product_description'] = $grab_deal->description;
+                    $data['quntity'] = $item->quantity;
+                    $data['price'] = $item->item_price;
+                    $total_price += $item->item_price * $item->quantity;
+                }else{
+                    CartItems::where('user_id',$user_id)->where('grab_best_deal_id',$item->grab_best_deal_id)->delete();
+                }
             }else{
-                $data['cart_item_id'] = $item->id;
-                $data['user_id'] = $user_id;
-                $data['image_url'] = Products::where('id',$item->product_id)->first()->image_url;
-                $data['product_name'] = Products::where('id',$item->product_id)->first()->name;
-                $data['product_description'] = Products::where('id',$item->product_id)->first()->description;
-                $data['quntity'] = $item->quantity;
-                $data['price'] = $item->item_price;
-                $total_price += $item->item_price * $item->quantity;
+                $product = Products::where('id',$item->product_id)->first();
+                if($product){
+                    $data['cart_item_id'] = $item->id;
+                    $data['user_id'] = $user_id;
+                    $data['image_url'] = $product->image_url;
+                    $data['product_name'] = $product->name;
+                    $data['product_description'] = $product->description;
+                    $data['quntity'] = $item->quantity;
+                    $data['price'] = $item->item_price;
+                    $total_price += $item->item_price * $item->quantity;
+                }else{
+                    Products::where('id',$item->product_id)->delete();
+                }
             }
             array_push($cartData,$data);
         }
-        if(!$cartData){
+        if(count($cartData) > 0){
             return response()->json(['data' => NUll,'item_total'=> $total_price, 'message' => 'Cart Items not found.','status' => false]);
         }
         return response()->json(['data' => $cartData,'item_total'=> $total_price,'message' => 'Cart Items get Successfully.','status' => true]);

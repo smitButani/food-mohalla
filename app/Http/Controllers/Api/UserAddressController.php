@@ -45,7 +45,7 @@ class UserAddressController extends Controller
     }
 
     public function list(Request $request){
-        $userAddress = UserAddress::all();
+        $userAddress = UserAddress::where('user_id',auth()->user()->id)->get();
         return response()->json(['data' => $userAddress,'message' => 'User Address get Successfully.','status' => true]);
     }
 
