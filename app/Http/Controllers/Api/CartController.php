@@ -140,7 +140,7 @@ class CartController extends Controller
         }
     }
 
-    public function getCart(){
+    public function getCart(Request $request){
         $validator = Validator::make($request->all(), 
         [
             'shop_id'=>'required',
