@@ -49,7 +49,7 @@ Route::get('offers/', 'Api\OfferController@list');
 // Cart Api List
 Route::post('/product-item-total', 'Api\CartController@productTotalCount');
 Route::post('/add-to-cart', 'Api\CartController@addToCart')->middleware('auth:api');
-Route::get('/get-cart-item', 'Api\CartController@getCart')->middleware('auth:api');
+Route::post('/get-cart-item', 'Api\CartController@getCart')->middleware('auth:api');
 Route::post('/update-cart-item', 'Api\CartController@updateCart')->middleware('auth:api');
 Route::post('/delete-cart-item', 'Api\CartController@deleteCartItem')->middleware('auth:api');
 Route::get('/cart-reset', 'Api\CartController@cartReset')->middleware('auth:api');

@@ -141,47 +141,60 @@ class CartController extends Controller
     }
 
     public function getCart(Request $request){
-        $user_id = auth()->user()->id;
-        $getCartItems = CartItems::where('user_id',$user_id)->where('shop_id',$request->shop_id)->get();
-        $cartData = [];
-        $total_price = 0;
-        foreach($getCartItems as $item){
-            if(isset($item->grab_best_deal_id) && !empty($item->grab_best_deal_id) && $item->grab_best_deal_id > 0){
-                $grab_deal = GrabBestDeal::where('id',$item->grab_best_deal_id)->first();
-                if($grab_deal){
-                    $data['cart_item_id'] = $item->id;
-                    $data['user_id'] = $user_id;
-                    $data['image_url'] = $grab_deal->thumbnail_img_url;
-                    $data['product_name'] = $grab_deal->deal_name;
-                    $data['product_description'] = $grab_deal->description;
-                    $data['quntity'] = $item->quantity;
-                    $data['price'] = $item->item_price;
-                    $total_price += $item->item_price * $item->quantity;
-                    array_push($cartData,$data);
+        $validator = Validator::make($request->all(), 
+        [
+            'shop_id'=>'required',
+        ]);
+        if ($validator->fails()) {
+            return  response()->json([
+                'data' => $validator->messages(), 
+                'message' => 'please add valid data.', 
+                'status' => false
+            ]);
+        } else {
+            $user_id = auth()->user()->id;
+            $getCartItems = CartItems::where('user_id',$user_id)->where('shop_id',$request->shop_id)->get();
+            $cartData = [];
+            $total_price = 0;
+            foreach($getCartItems as $item){
+                if(isset($item->grab_best_deal_id) && !empty($item->grab_best_deal_id) && $item->grab_best_deal_id > 0){
+                    $grab_deal = GrabBestDeal::where('id',$item->grab_best_deal_id)->first();
+                    if($grab_deal){
+                        $data['cart_item_id'] = $item->id;
+                        $data['user_id'] = $user_id;
+                        $data['image_url'] = $grab_deal->thumbnail_img_url;
+                        $data['product_name'] = $grab_deal->deal_name;
+                        $data['product_description'] = $grab_deal->description;
+                        $data['quntity'] = $item->quantity;
+                        $data['price'] = $item->item_price;
+                        $total_price += $item->item_price * $item->quantity;
+                        array_push($cartData,$data);
+                    }else{
+                        CartItems::where('user_id',$user_id)->where('grab_best_deal_id',$item->grab_best_deal_id)->delete();
+                    }
                 }else{
-                    CartItems::where('user_id',$user_id)->where('grab_best_deal_id',$item->grab_best_deal_id)->delete();
-                }
-            }else{
-                $product = Products::where('id',$item->product_id)->first();
-                if($product){
-                    $data['cart_item_id'] = $item->id;
-                    $data['user_id'] = $user_id;
-                    $data['image_url'] = $product->image_url;
-                    $data['product_name'] = $product->name;
-                    $data['product_description'] = $product->description;
-                    $data['quntity'] = $item->quantity;
-                    $data['price'] = $item->item_price;
-                    $total_price += $item->item_price * $item->quantity;
-                    array_push($cartData,$data);
-                }else{
-                    Products::where('id',$item->product_id)->delete();
+                    $product = Products::where('id',$item->product_id)->first();
+                    if($product){
+                        $data['cart_item_id'] = $item->id;
+                        $data['user_id'] = $user_id;
+                        $data['image_url'] = $product->image_url;
+                        $data['product_name'] = $product->name;
+                        $data['product_description'] = $product->description;
+                        $data['quntity'] = $item->quantity;
+                        $data['price'] = $item->item_price;
+                        $total_price += $item->item_price * $item->quantity;
+                        array_push($cartData,$data);
+                    }else{
+                        Products::where('id',$item->product_id)->delete();
+                    }
                 }
             }
+            if(!$cartData){
+                return response()->json(['data' => NUll,'item_total'=> $total_price, 'message' => 'Cart Items not found.','status' => false]);
+            }
+            return response()->json(['data' => $cartData,'item_total'=> $total_price,'message' => 'Cart Items get Successfully.','status' => true]);
+
         }
-        if(!$cartData){
-            return response()->json(['data' => NUll,'item_total'=> $total_price, 'message' => 'Cart Items not found.','status' => false]);
-        }
-        return response()->json(['data' => $cartData,'item_total'=> $total_price,'message' => 'Cart Items get Successfully.','status' => true]);
     }
 
     public function updateCart(Request $request){
