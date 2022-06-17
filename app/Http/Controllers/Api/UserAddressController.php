@@ -33,6 +33,7 @@ class UserAddressController extends Controller
             ]);
         } else {
             $userAddress = new UserAddress();
+            $userAddress->user_name = $request->user_name;
             $userAddress->user_id = $request->user_id;
             $userAddress->address = $request->address;
             $userAddress->zipcode = $request->zipcode;
@@ -84,6 +85,7 @@ class UserAddressController extends Controller
             if(!$userAddress){
                 return response()->json(['data' => NUll,'message' => 'User Address not found.','status' => false]);
             }
+            $userAddress->user_name = $request->user_name;
             $userAddress->user_id = $request->user_id;
             $userAddress->address = $request->address;
             $userAddress->zipcode = $request->zipcode;
