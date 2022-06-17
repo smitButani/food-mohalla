@@ -18,6 +18,7 @@ use App\Models\Shops;
 use App\Models\UserAddress;
 use App\Models\DeliveryBoy;
 use App\Models\Offers;
+use App\Models\Charges;
 use DB;
 use Carbon\Carbon;
 
@@ -140,46 +141,60 @@ class CartController extends Controller
     }
 
     public function getCart(){
-        $user_id = auth()->user()->id;
-        $getCartItems = CartItems::where('user_id',$user_id)->get();
-        $cartData = [];
-        $total_price = 0;
-        foreach($getCartItems as $item){
-            if(isset($item->grab_best_deal_id) && !empty($item->grab_best_deal_id) && $item->grab_best_deal_id > 0){
-                $grab_deal = GrabBestDeal::where('id',$item->grab_best_deal_id)->first();
-                if($grab_deal){
-                    $data['cart_item_id'] = $item->id;
-                    $data['user_id'] = $user_id;
-                    $data['image_url'] = $grab_deal->thumbnail_img_url;
-                    $data['product_name'] = $grab_deal->deal_name;
-                    $data['product_description'] = $grab_deal->description;
-                    $data['quntity'] = $item->quantity;
-                    $data['price'] = $item->item_price;
-                    $total_price += $item->item_price * $item->quantity;
+        $validator = Validator::make($request->all(), 
+        [
+            'shop_id'=>'required',
+        ]);
+        if ($validator->fails()) {
+            return  response()->json([
+                'data' => $validator->messages(), 
+                'message' => 'please add valid data.', 
+                'status' => false
+            ]);
+        } else {
+            $user_id = auth()->user()->id;
+            $getCartItems = CartItems::where('user_id',$user_id)->where('shop_id',$request->shop_id)->get();
+            $cartData = [];
+            $total_price = 0;
+            foreach($getCartItems as $item){
+                if(isset($item->grab_best_deal_id) && !empty($item->grab_best_deal_id) && $item->grab_best_deal_id > 0){
+                    $grab_deal = GrabBestDeal::where('id',$item->grab_best_deal_id)->first();
+                    if($grab_deal){
+                        $data['cart_item_id'] = $item->id;
+                        $data['user_id'] = $user_id;
+                        $data['image_url'] = $grab_deal->thumbnail_img_url;
+                        $data['product_name'] = $grab_deal->deal_name;
+                        $data['product_description'] = $grab_deal->description;
+                        $data['quntity'] = $item->quantity;
+                        $data['price'] = $item->item_price;
+                        $total_price += $item->item_price * $item->quantity;
+                        array_push($cartData,$data);
+                    }else{
+                        CartItems::where('user_id',$user_id)->where('grab_best_deal_id',$item->grab_best_deal_id)->delete();
+                    }
                 }else{
-                    CartItems::where('user_id',$user_id)->where('grab_best_deal_id',$item->grab_best_deal_id)->delete();
-                }
-            }else{
-                $product = Products::where('id',$item->product_id)->first();
-                if($product){
-                    $data['cart_item_id'] = $item->id;
-                    $data['user_id'] = $user_id;
-                    $data['image_url'] = $product->image_url;
-                    $data['product_name'] = $product->name;
-                    $data['product_description'] = $product->description;
-                    $data['quntity'] = $item->quantity;
-                    $data['price'] = $item->item_price;
-                    $total_price += $item->item_price * $item->quantity;
-                }else{
-                    Products::where('id',$item->product_id)->delete();
+                    $product = Products::where('id',$item->product_id)->first();
+                    if($product){
+                        $data['cart_item_id'] = $item->id;
+                        $data['user_id'] = $user_id;
+                        $data['image_url'] = $product->image_url;
+                        $data['product_name'] = $product->name;
+                        $data['product_description'] = $product->description;
+                        $data['quntity'] = $item->quantity;
+                        $data['price'] = $item->item_price;
+                        $total_price += $item->item_price * $item->quantity;
+                        array_push($cartData,$data);
+                    }else{
+                        Products::where('id',$item->product_id)->delete();
+                    }
                 }
             }
-            array_push($cartData,$data);
+            if(!$cartData){
+                return response()->json(['data' => NUll,'item_total'=> $total_price, 'message' => 'Cart Items not found.','status' => false]);
+            }
+            return response()->json(['data' => $cartData,'item_total'=> $total_price,'message' => 'Cart Items get Successfully.','status' => true]);
+
         }
-        if(count($cartData) > 0){
-            return response()->json(['data' => NUll,'item_total'=> $total_price, 'message' => 'Cart Items not found.','status' => false]);
-        }
-        return response()->json(['data' => $cartData,'item_total'=> $total_price,'message' => 'Cart Items get Successfully.','status' => true]);
     }
 
     public function updateCart(Request $request){
@@ -268,10 +283,12 @@ class CartController extends Controller
             $longitudeFrom =  $shop->longitude;
             $latitudeTo = $user_lat;
             $longitudeTo = $user_long;
-            $GST = $total_price * 18/100;
+            $charges = Charges::where('shop_id',$request->shop_id)->first();
+            $gst_charges = (isset($charges->gst_charge) ? $charges->gst_charge : 18 );
+            $GST = $total_price * $gst_charges/100;
             $data['purchase_price'] = $total_price;
             $data['GST'] = $GST;
-            $charges = 15;
+            $charges = (isset($charges->per_km_delivery_charge) ? $charges->per_km_delivery_charge : 15 );
             $data['delivery_distance'] = round($this->checkDisctranceCharges($latitudeFrom, $longitudeFrom, $latitudeTo, $longitudeTo),2);
             $data['per_km_charges'] = $charges;
             $data['delivery_charges'] = round($this->checkDisctranceCharges($latitudeFrom, $longitudeFrom, $latitudeTo, $longitudeTo)*$charges);
@@ -487,7 +504,9 @@ class CartController extends Controller
         $dicount_amount = round($request->discount_amount);
 
         //delivery charges 
-        $charges = 15;
+        $charges = Charges::where('shop_id',$request->shop_id)->first();
+        
+        $charges = (isset($charges->per_km_delivery_charge) ? $charges->per_km_delivery_charge : 15 );
         $order->delivery_distance = round($this->checkDisctranceCharges($latitudeFrom, $longitudeFrom, $latitudeTo, $longitudeTo),2);
         $order->delivery_charges = round($this->checkDisctranceCharges($latitudeFrom, $longitudeFrom, $latitudeTo, $longitudeTo),2)*$charges;
 
@@ -498,7 +517,8 @@ class CartController extends Controller
             $total_price += $item->item_price * $item->quantity;
         }
 
-        $GST = $total_price * 18/100;
+        $gst_charges = (isset($charges->gst_charge) ? $charges->gst_charge : 18 );
+        $GST = $total_price * $gst_charges/100;
         $order->gst_charges = $GST;
 
         $order->item_total = $total_price;

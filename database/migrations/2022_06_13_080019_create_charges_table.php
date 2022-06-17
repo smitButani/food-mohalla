@@ -15,8 +15,9 @@ class CreateChargesTable extends Migration
     {
         Schema::create('charges', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->string('charges_name');
-            $table->string('charges');
+            $table->string('shop_id');
+            $table->string('gst_charge');
+            $table->string('per_km_delivery_charge');
             $table->timestamps();
         });
     }

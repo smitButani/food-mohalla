@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\UserAddress;
+use App\Models\Charges;
 use Validator;
 use DB;
 use Carbon\Carbon;
@@ -22,6 +23,7 @@ class UserAddressController extends Controller
             'state'=>'required',
             'country'=>'required',
             'type'=>'required',
+            'user_name'=>'required',
         ]);
         if ($validator->fails()) {
             return  response()->json([
@@ -69,6 +71,7 @@ class UserAddressController extends Controller
             'state'=>'required',
             'country'=>'required',
             'type'=>'required',
+            'user_name'=>'required',
         ]);
         if ($validator->fails()) {
             return  response()->json([
