@@ -22,7 +22,7 @@ class UserController extends Controller
         if ($validator->fails()) {
             return  response()->json([
                 'data' => $validator->messages(), 
-                'message' => 'please add valid data.', 
+                'message' => 'Please enter Valid Number.', 
                 'status' => false
             ]);
         } else {
@@ -64,7 +64,7 @@ class UserController extends Controller
                     } 
                     return response()->json(['data' => ['otp_token' => $randomNumber ],'message' => 'Otp Generated Successfully.','status' => true]);
                 }catch(\Exception $e){
-                    return response()->json(['data' => false,'message' => 'Please enter Valid Phone Number','status' => false]);
+                    return response()->json(['data' => false,'message' => 'Please enter Valid Number','status' => false]);
                 }
             }
             

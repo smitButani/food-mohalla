@@ -319,7 +319,7 @@ class CartController extends Controller
         if ($validator->fails()) {
             return  response()->json([
                 'data' => $validator->messages(), 
-                'message' => 'please add valid data.', 
+                'message' => 'Invalid Promo code.', 
                 'status' => false
             ]);
         } else {
@@ -432,7 +432,7 @@ class CartController extends Controller
             }
         }
         $data['discount_amount'] = $discount_amount;
-        return response()->json(['data' => $data,'message' => 'Promo code check Successfully.','status' => true]);
+        return response()->json(['data' => $data,'message' => 'Promo code applied successfully','status' => true]);
     }
 
     public function createOrder(Request $request){
