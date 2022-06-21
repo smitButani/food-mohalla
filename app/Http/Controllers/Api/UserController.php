@@ -22,7 +22,7 @@ class UserController extends Controller
         if ($validator->fails()) {
             return  response()->json([
                 'data' => $validator->messages(), 
-                'message' => 'Please enter Valid Number.', 
+                'message' => 'Please enter Valid Number', 
                 'status' => false
             ]);
         } else {
@@ -46,7 +46,7 @@ class UserController extends Controller
                     $api_key = '62a69b57eaf4d';
                     $response = $client->request('GET', $endpoint, ['query' => [
                         'apikey' => $api_key,
-                        'route' => $route,
+                        // 'route' => $route,
                         'sender' => $sender,
                         'mobileno' => $phone_number,
                         'text' => $sms_template
