@@ -325,6 +325,7 @@ class CartController extends Controller
         } else {
             $user_id = auth()->user()->id;
             $allCartItems = CartItems::where('user_id',$user_id)->get();
+            $shop_id = $allCartItems[0]->shop_id;
             $total_price = 0;
             foreach($allCartItems as $item){
                 $total_price += $item->item_price * $item->quantity;
@@ -332,6 +333,7 @@ class CartController extends Controller
             $data = [];
             $discount_amount = 0;
             $offer =  Offers::where('coupon_code',$request->promo_code)->where('is_active',1)->first();
+            $date_now = date("d-m-Y");
             if($offer){
                     if($offer->min_cart_price > 0){
                         if($offer->min_cart_price < $total_price){
@@ -353,9 +355,11 @@ class CartController extends Controller
                                         $discount_amount = $products->price * $offer->discount_amount / 100;
                                         $discount_amount = ($discount_amount > $offer->max_discount_amount) ? $offer->max_discount_amount : $discount_amount;
                                     }
-                                } else if($offer->apply_on_category > 0){
-                                    echo 'check this category ?';
-                                } else {
+                                } 
+                                // else if($offer->apply_on_category > 0){
+                                //     echo 'check this category ?';
+                                // } 
+                                else {
                                     $discount_amount = $total_price * $offer->discount_amount / 100;
                                     $discount_amount = ($discount_amount > $offer->max_discount_amount) ? $offer->max_discount_amount : $discount_amount;
                                 }
@@ -374,10 +378,26 @@ class CartController extends Controller
                                     if($productExistOrNot){
                                         $discount_amount = $offer->discount_amount;
                                     }
-                                } else if($offer->apply_on_category > 0){
-                                    echo 'check this category ?';
-                                } else {
+                                } 
+                                // else if($offer->apply_on_category > 0){
+                                //     echo 'check this category ?';
+                                // } 
+                                else {
                                     $discount_amount = $offer->discount_amount;
+                                }
+                            }
+                            if($offer->free_product_id){
+                                $discount_amount = 0;
+                                $product = Products::where('id',$offer->free_product_id)->first();
+                                if(!empty($product)){
+                                    $discount_amount =  $product->price;
+                                    $cartItems = new CartItems();
+                                    $cartItems->user_id = $user_id;
+                                    $cartItems->shop_id = $shop_id;
+                                    $cartItems->product_id = $offer->free_product_id;
+                                    $cartItems->quantity = '1';
+                                    $cartItems->item_price = $discount_amount;
+                                    $cartItems->save();
                                 }
                             }
                         }else{
@@ -400,9 +420,11 @@ class CartController extends Controller
                                     $discount_amount = $products->price * $offer->discount_amount / 100;
                                     $discount_amount = ($discount_amount > $offer->max_discount_amount) ? $offer->max_discount_amount : $discount_amount;
                                 }
-                            } else if($offer->apply_on_category > 0){
-                                // echo 'check this category ?';
-                            } else {
+                            } 
+                            // else if($offer->apply_on_category > 0){
+                            //     // echo 'check this category ?';
+                            // } 
+                            else {
                                 $discount_amount = $total_price * $offer->discount_amount /100 ;
                             }
                         }
@@ -420,10 +442,26 @@ class CartController extends Controller
                                 if($productExistOrNot){
                                     $discount_amount = $offer->discount_amount;
                                 }
-                            } else if($offer->apply_on_category > 0){
-                                echo 'check this category ?';
-                            } else {
+                            } 
+                            // else if($offer->apply_on_category > 0){
+                            //     echo 'check this category ?';
+                            // } 
+                            else {
                                 $discount_amount = $offer->discount_amount;
+                            }
+                        }
+                        if($offer->free_product_id){
+                            $discount_amount = 0;
+                            $product = Products::where('id',$offer->free_product_id)->first();
+                            if(!empty($product)){
+                                $discount_amount =  $product->price;
+                                $cartItems = new CartItems();
+                                $cartItems->user_id = $user_id;
+                                $cartItems->shop_id = $shop_id;
+                                $cartItems->product_id = $offer->free_product_id;
+                                $cartItems->quantity = '1';
+                                $cartItems->item_price = $discount_amount;
+                                $cartItems->save();
                             }
                         }
                     }

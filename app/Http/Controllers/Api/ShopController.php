@@ -57,23 +57,21 @@ class ShopController extends Controller
         $long = $request->current_long;
         if($lat && $long && !$request->search){
                 $shops = \DB::table("shops")
-                ->select("shops.*", \DB::raw("6371 * acos(cos(radians(" . $lat . "))
+                ->select("shops.*", \DB::raw("ROUND(6371 * acos(cos(radians(" . $lat . "))
                 * cos(radians(shops.latitude)) 
                 * cos(radians(shops.longitude) - radians(" . $long . ")) 
                 + sin(radians(" .$lat. ")) 
-                * sin(radians(shops.latitude))) AS distance"))
-                ->having('distance', '<', 3)
+                * sin(radians(shops.latitude))), 2) AS distance"))
                 ->orderBy('distance', 'asc')
                 ->get();
         }elseif($lat && $long && $request->search){
             $shops = \DB::table("shops")
-            ->select("shops.*", \DB::raw("6371 * acos(cos(radians(" . $lat . "))
+            ->select("shops.*", \DB::raw("ROUND(6371 * acos(cos(radians(" . $lat . "))
             * cos(radians(shops.latitude)) 
             * cos(radians(shops.longitude) - radians(" . $long . ")) 
             + sin(radians(" .$lat. ")) 
-            * sin(radians(shops.latitude))) AS distance"))
+            * sin(radians(shops.latitude))), 2) AS distance"))
             ->where('city', 'like', '%' . $request->search . '%')
-            ->having('distance', '<', 3)
             ->orderBy('distance', 'asc')
             ->get();
         }elseif($request->search && !$lat && !$long){
@@ -81,7 +79,12 @@ class ShopController extends Controller
         }else{
             $shops = Shops::all();
         }
-        return response()->json(['data' => $shops,'message' => 'Shops get successfully.','status' => true]);
+        foreach($shops as $shop){
+            if($shop->distance <= $shop->max_delivery_distrance){
+                $shop_data[] = $shop;
+            }
+        }
+        return response()->json(['data' => $shop_data,'message' => 'Shops get successfully.','status' => true]);
     }
 
     public function get_one(Request $request){
